@@ -1,0 +1,38 @@
+{
+  "retailer": "Demo Retail Energy Co.",
+  "customer_name": "Morgan Invented",
+  "service_address": "55 Mock Blvd, Testville AB T0T 0A6",
+  "account_number": "4400110022008",
+  "bill_date": "2026-09-07",
+  "current_charges_total": 165.21,
+  "gst_amount": 7.87,
+  "credits_total": null,
+  "services": [
+    {
+      "commodity": "electricity",
+      "site_id": "0000099000018",
+      "plan_name": "Variable Plan",
+      "period_start": "2026-08-02",
+      "period_end": "2026-08-31",
+      "days": 30,
+      "usage": 580.0,
+      "usage_unit": "kWh",
+      "usage_m3": null,
+      "gas_conversion_factor": null,
+      "meter_previous": 52414.0,
+      "meter_current": 52994.0,
+      "meter_multiplier": 1.0,
+      "estimated_read": false,
+      "energy_rate": 12.3,
+      "energy_rate_unit": "cents_per_kWh",
+      "energy_charge": 91.34,
+      "admin_fee": 9.0,
+      "admin_fee_rate": 0.3,
+      "admin_fee_basis": "per_day",
+      "delivery_total": 57.0,
+      "service_subtotal": 157.34
+    }
+  ],
+  "confidence": "high",
+  "unreadable": []
+}

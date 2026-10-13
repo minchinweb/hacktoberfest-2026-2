@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bill2quote"
+version = "0.1.0"
+description = "Photo of a utility bill in, honest savings quote out. Local vision model reads; Python checks."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2",
+  "httpx",
+  "pypdfium2",
+  "Pillow",
+  "Jinja2",
+  "fastapi",
+  "uvicorn",
+  "python-multipart",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "reportlab", "numpy"]
+
+[project.scripts]
+bill2quote = "bill2quote.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bill2quote = ["web/templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["C408", "E731", "E501"]

@@ -1,0 +1,50 @@
+# Copy to config.toml (gitignored) and edit. Everything here is a fictional demo.
+
+[models]
+extract = "gemma4:e4b"                 # chosen by `bill2quote eval`
+compare = ["gemma4:e4b", "qwen3-vl:8b"]
+ollama_host = "http://localhost:11434"
+max_pages = 4
+max_image_side = 2000
+
+[brand]                                 # fictional demo brand
+name = "Demo Retail Energy Co."
+phone = ""
+email = ""
+logo = ""
+
+[tax]
+gst_rate = "0.05"
+
+[checks]
+site_id_regex.electricity = '^0\d{12}$' # 13 digits, leading 0
+site_id_regex.gas = '^0\d{12}$'         # same format as electricity
+elec_rate_cents_range = [2, 40]
+gas_rate_dollars_range = [1, 20]
+gas_factor_range = [0.030, 0.045]       # GJ per m3; a deliberately loose sanity range
+period_days_range = [20, 40]
+money_tolerance = "0.02"
+pct_tolerance = "0.005"
+
+[annualize]
+gas_base_fraction = "0.15"              # non-heating share of annual gas; an assumption
+hdd_monthly = []                        # 12 values; Edmonton normals, source to be cited
+
+# Fictional, round demo offers. Chosen so sample bill #8 comes out negative.
+[[offer]]
+id = "elec-fixed-3y"
+commodity = "electricity"
+name = "Fixed 3-year"
+energy_rate = "0.0899"                  # $/kWh
+admin_fee_per_day = "0.30"
+term_months = 36
+terms_url = ""
+
+[[offer]]
+id = "gas-fixed-3y"
+commodity = "gas"
+name = "Fixed 3-year"
+energy_rate = "3.99"                    # $/GJ
+admin_fee_per_day = "0.30"
+term_months = 36
+terms_url = ""

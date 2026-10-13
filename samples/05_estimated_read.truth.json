@@ -1,0 +1,38 @@
+{
+  "retailer": "Demo Retail Energy Co.",
+  "customer_name": "Alex Notreal",
+  "service_address": "9 Make-Believe Pl, Testville AB T0T 0A4",
+  "account_number": "4400110022006",
+  "bill_date": "2026-09-05",
+  "current_charges_total": 113.66,
+  "gst_amount": 5.41,
+  "credits_total": null,
+  "services": [
+    {
+      "commodity": "electricity",
+      "site_id": "0000099000015",
+      "plan_name": "Variable Plan",
+      "period_start": "2026-08-02",
+      "period_end": "2026-08-30",
+      "days": 29,
+      "usage": 455.0,
+      "usage_unit": "kWh",
+      "usage_m3": null,
+      "gas_conversion_factor": null,
+      "meter_previous": 42932.0,
+      "meter_current": 43387.0,
+      "meter_multiplier": 1.0,
+      "estimated_read": true,
+      "energy_rate": 0.1099,
+      "energy_rate_unit": "dollars_per_kWh",
+      "energy_charge": 50.0,
+      "admin_fee": 7.25,
+      "admin_fee_rate": 0.25,
+      "admin_fee_basis": "per_day",
+      "delivery_total": 51.0,
+      "service_subtotal": 108.25
+    }
+  ],
+  "confidence": "high",
+  "unreadable": []
+}

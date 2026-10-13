@@ -76,7 +76,7 @@ Qwen scored one bill better, but it always thinks (the `think: false` flag has n
 
 ### Honest limits
 
-- **Every number above is from synthetic bills**, including the phone photo of a printed-and-photographed-style bill. Real retailer layouts are the next test and I expect them to be harder.
+- **Every number above is from synthetic bills**, including the "phone photo", which so far is a Pillow simulation. Real photos of printed bills, taken on a real phone, are still to come. [TODO: update once the Pixel 7 photos are in the eval.] Real retailer layouts are the next test and I expect them to be harder.
 - A frontier hosted model would probably read a blurry phone photo better. That is a real cost of staying local.
 - The 12-month estimate for gas is a rough days-scaling, labelled as such on the page, until I add heating-degree-day data. Per-bill numbers get top billing for that reason.
 - The offers in the demo are made-up round numbers. This is not a statement about any real price.
@@ -107,7 +107,7 @@ My first user is me, as the retailer: internal use by the buyer, which is a weak
 
 ## Prize Categories
 
-**Best Use of Gemma.** Gemma 4 e4b is the default reader. It reads every bill in the eval to a valid result and runs in about nine seconds on a laptop-class machine. I report where it fails and how the checks catch it, and I report that Qwen3-VL scored one bill higher. I'm not claiming any other category.
+**Best Use of Gemma.** Gemma 4 e4b is the default reader. It reads every bill in the eval to a valid result and takes about nine seconds a bill on my Windows laptop. I report where it fails and how the checks catch it, and I report that Qwen3-VL scored one bill higher. I'm not claiming any other category.
 
 ---
 

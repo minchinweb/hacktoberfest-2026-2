@@ -87,19 +87,18 @@ def cmd_batch(args) -> int:
     cfg = _cfg(args)
     files = sorted(p for p in Path(args.dir).iterdir()
                    if p.suffix.lower() in (".pdf", ".jpg", ".jpeg", ".png"))
-    print(f"{'file':32} {'services':18} {'flags':22} savings (incl. GST)")
+    print(f"{'file':32} {'services':18} {'flags':26} savings (incl. GST)")
     for p in files:
         try:
             sha, facts = _read_cached(p, cfg)
         except extract.ExtractError as e:
             print(f"{p.name:32} READ FAILED: {str(e)[:60]}")
             continue
-        flags = check_bill(facts, cfg)
-        counts = {s: sum(f.severity == s for f in flags) for s in ("BLOCK", "WARN", "INFO")}
-        flag_txt = " ".join(f"{n}{s[0]}" for s, n in counts.items() if n) or "-"
+        flags = check_bill(facts, cfg, store.seen_sites(exclude=sha))
+        flag_txt = " ".join(dict.fromkeys(f.id for f in flags)) or "-"
         svc = "+".join(s.commodity[:4] for s in facts.services)
         if has_block(flags):
-            print(f"{p.name:32} {svc:18} {flag_txt:22} NEEDS REVIEW (blocking flag)")
+            print(f"{p.name:32} {svc:18} {flag_txt:26} NEEDS REVIEW (blocking flag)")
             continue
         q = quote.build_quote(facts, cfg)
         sav = " ".join(f"{s.commodity[:4]} {render.money(s.diff) if s.diff >= 0 else '-' + render.money(-s.diff)}"
@@ -107,7 +106,7 @@ def cmd_batch(args) -> int:
         out = store.bill_dir(sha) / "quote-staff.html"
         out.write_text(render.render_quote(facts, q, flags, cfg, view="staff", draft=True),
                        encoding="utf-8")
-        print(f"{p.name:32} {svc:18} {flag_txt:22} {sav}")
+        print(f"{p.name:32} {svc:18} {flag_txt:26} {sav}")
     return 0
 
 

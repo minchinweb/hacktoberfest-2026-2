@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Snap a bill</h1>
+<p class="muted">Photo or PDF of the customer's bill. Add every page. It is read on this machine; nothing leaves your network.</p>
+<form method="post" action="/upload" enctype="multipart/form-data">
+  <input type="hidden" name="ref" value="{{ ref }}">
+  <p><input type="file" name="files" accept="image/*,application/pdf" capture="environment" multiple required></p>
+  <p><button>Snap bill</button></p>
+</form>
+<p class="muted">{% if ref %}Partner code: {{ ref }}{% else %}No partner code. Add <code>?ref=CODE</code> to the address.{% endif %}
+ · <a href="/enrolments">Enrolment list</a></p>
+{% endblock %}

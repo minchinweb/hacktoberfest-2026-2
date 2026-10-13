@@ -21,7 +21,7 @@
       "gas_conversion_factor": null,
       "meter_previous": 52414.0,
       "meter_current": 52994.0,
-      "meter_multiplier": 1.0,
+      "meter_multiplier": null,
       "estimated_read": false,
       "energy_rate": 12.3,
       "energy_rate_unit": "cents_per_kWh",

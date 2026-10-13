@@ -30,7 +30,8 @@ class ExtractError(RuntimeError):
     pass
 
 
-def extract(pages: list[Image.Image], model: str, host: str) -> tuple[BillFacts, dict]:
+def extract(pages: list[Image.Image], model: str, host: str,
+            num_ctx: int = 16384, num_predict: int = 8192) -> tuple[BillFacts, dict]:
     """One request with all pages. Returns (facts, meta). Raises ExtractError on bad output."""
     images = [base64.b64encode(to_png_bytes(p)).decode() for p in pages]
     body = {
@@ -38,7 +39,7 @@ def extract(pages: list[Image.Image], model: str, host: str) -> tuple[BillFacts,
         "stream": False,
         "think": False,
         "format": json_schema(),
-        "options": {"temperature": 0},
+        "options": {"temperature": 0, "num_ctx": num_ctx, "num_predict": num_predict},
         "messages": [{"role": "user", "content": prompt_text(), "images": images}],
     }
     t0 = time.monotonic()

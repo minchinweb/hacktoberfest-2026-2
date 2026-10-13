@@ -6,6 +6,8 @@ compare = ["gemma4:e4b", "qwen3-vl:8b"]
 ollama_host = "http://localhost:11434"
 max_pages = 4
 max_image_side = 2000
+num_ctx = 16384                         # qwen3-vl always thinks; too small a budget = empty output
+num_predict = 8192
 
 [brand]                                 # fictional demo brand
 name = "Demo Retail Energy Co."

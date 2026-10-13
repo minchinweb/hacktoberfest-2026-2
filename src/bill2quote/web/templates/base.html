@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}bill2quote{% endblock %}</title>
+<style>
+  :root { --ink:#1b2430; --muted:#5b6673; --line:#d9dee5; --bg:#fff; --card:#f5f7fa; --accent:#0b5cad; --warn:#fff4d6; --warnb:#d97706; --block:#fde2e2; --blockb:#b91c1c; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#e8ecf1; --muted:#9aa5b1; --line:#2c3541; --bg:#10151b; --card:#171e26; --accent:#6db3f2; --warn:#3a2f10; --block:#3d1717; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { font-size:1.4rem; margin:8px 0 12px; } h2 { font-size:1.05rem; margin:20px 0 8px; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  button, .btn { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:12px 18px; font-size:1rem; text-decoration:none; display:inline-block; cursor:pointer; }
+  .btn.alt { background:var(--card); color:var(--ink); border:1px solid var(--line); }
+  input[type=text], input[type=password], select { width:100%; padding:8px; font-size:1rem; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); }
+  .err { background:var(--block); border-left:4px solid var(--blockb); padding:8px 12px; margin:8px 0; }
+  {% block style %}{% endblock %}
+</style>
+</head>
+<body><main>{% block body %}{% endblock %}</main></body>
+</html>

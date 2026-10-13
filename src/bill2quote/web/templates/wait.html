@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Reading your bill…</h1>
+<p class="muted" id="msg">This usually takes 5 to 60 seconds.</p>
+<script>
+async function poll() {
+  try {
+    const r = await (await fetch("/bill/{{ sha }}/status")).json();
+    if (r.state === "done") { location.href = "/bill/{{ sha }}/review"; return; }
+    if (r.state === "error") { document.getElementById("msg").textContent = "Could not read this bill: " + r.message; return; }
+  } catch (e) {}
+  setTimeout(poll, 2000);
+}
+poll();
+</script>
+{% endblock %}

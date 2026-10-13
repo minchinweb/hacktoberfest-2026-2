@@ -1,0 +1,19 @@
+<style>.bar{background:#f5f7fa;color:#1b2430;border:1px solid #d9dee5;border-radius:8px;padding:8px 12px;margin:0 0 12px}.bar label{margin-right:12px;font-size:.9rem}.bar input,.bar select{font-size:.95rem;padding:4px}@media print{.bar{display:none}}</style>
+<form class="bar" method="get">
+  <input type="hidden" name="view" value="{{ view }}">
+  {% for c in ['electricity','gas'] %}
+    {% set cur = elec if c == 'electricity' else gas %}
+    <label>{{ c|capitalize }} offer
+      <select name="{{ 'elec' if c == 'electricity' else 'gas' }}" onchange="this.form.submit()">
+        {% for o in offers if o.commodity == c %}<option value="{{ o.id }}" {{ 'selected' if o.id == cur }}>{{ o.name }}</option>{% endfor %}
+      </select></label>
+  {% endfor %}
+  <label>Annual kWh <input name="annual_elec" size="7" value="{{ annual_elec }}"></label>
+  <label>Annual GJ <input name="annual_gas" size="6" value="{{ annual_gas }}"></label>
+  <button>Update</button>
+</form>
+<form class="bar" method="post" action="/bill/{{ sha }}/enrol">
+  <input type="hidden" name="elec" value="{{ elec }}"><input type="hidden" name="gas" value="{{ gas }}">
+  {% if blocked_enrol %}<span>Enrolment blocked: fix the site IDs on the review screen.</span>{% else %}<button>Add to enrolment list</button>{% endif %}
+  · <a href="/bill/{{ sha }}/review">Back to review</a> · <a href="/">Next bill</a>
+</form>

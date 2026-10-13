@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>bill2quote</h1>
+{% if error %}<div class="err">Wrong password.</div>{% endif %}
+<form method="post" action="/login"><p><input type="password" name="pw" placeholder="Password" autofocus></p><button>Sign in</button></form>
+{% endblock %}

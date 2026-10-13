@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block style %}
+  .split { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:900px) { .split { grid-template-columns:1fr 1fr; align-items:start; } .imgs { position:sticky; top:8px; } }
+  .imgs { overflow:auto; max-height:90vh; border:1px solid var(--line); } .imgs img { width:100%; display:block; touch-action:pinch-zoom; }
+  .field { margin:8px 0; padding:6px 8px; border-left:4px solid transparent; }
+  .field.WARN { background:var(--warn); border-color:var(--warnb); } .field.BLOCK { background:var(--block); border-color:var(--blockb); }
+  .field label { font-size:.85rem; color:var(--muted); display:block; } .why { font-size:.85rem; }
+  .svc { border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin:12px 0; }
+{% endblock %}
+{% macro field(name, key, value, by_field) %}
+  {% set fl = by_field.get(key, []) %}
+  {% set sev = 'BLOCK' if fl|selectattr('severity','equalto','BLOCK')|list else ('WARN' if fl|selectattr('severity','equalto','WARN')|list else '') %}
+  <div class="field {{ sev }}">
+    <label for="{{ name }}">{{ key.split('.')[-1] }}</label>
+    <input type="text" id="{{ name }}" name="{{ name }}" value="{{ '' if value is none else value }}">
+    {% for f in fl %}<div class="why">{{ f.severity }} {{ f.id }}: {{ f.message }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+{% block body %}
+<h1>Check what was read</h1>
+{% for e in errors %}<div class="err">{{ e }}</div>{% endfor %}
+<div class="split">
+  <div class="imgs">{% for n in range(1, n_pages + 1) %}<img src="/bill/{{ sha }}/page/{{ n }}.png" alt="Bill page {{ n }}">{% endfor %}</div>
+  <form method="post">
+    {% for f in top_fields %}{{ field('top.' ~ f, f, values[f], by_field) }}{% endfor %}
+    {% for s in facts.services %}
+      {% set i = loop.index0 %}
+      <div class="svc"><h2>{{ s.commodity|capitalize }}</h2>
+        {% for f in service_fields %}{{ field('s' ~ i ~ '.' ~ f, 'services[' ~ i ~ '].' ~ f, svc_values[i][f], by_field) }}{% endfor %}
+      </div>
+    {% endfor %}
+    {% if needs_ack %}<p><label><input type="checkbox" name="ack"> I checked the flagged fields</label></p>{% endif %}
+    <p><button>Confirm</button></p>
+  </form>
+</div>
+{% endblock %}

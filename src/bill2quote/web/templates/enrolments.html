@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Enrolment list ({{ count }})</h1>
+<p><a class="btn" href="/enrolments.csv">Download CSV</a> <a class="btn alt" href="/">Next bill</a></p>
+<pre style="overflow:auto">{% for r in rows %}{{ r }}
+{% endfor %}</pre>
+{% endblock %}

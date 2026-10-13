@@ -15,6 +15,8 @@ DEFAULTS: dict[str, Any] = {
         "ollama_host": "http://localhost:11434",
         "max_pages": 4,
         "max_image_side": 2000,
+        "num_ctx": 16384,
+        "num_predict": 8192,
     },
     "brand": {"name": "Demo Retail Energy Co.", "phone": "", "email": "", "logo": ""},
     "tax": {"gst_rate": "0.05"},

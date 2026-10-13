@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Savings comparison</title>
+<style>
+  :root { --ink:#1b2430; --muted:#5b6673; --line:#d9dee5; --good:#17653a; --bad:#9a3412; --bg:#fff; --card:#f5f7fa; }
+  @media (prefers-color-scheme: dark) { :root:not(.print) { --ink:#e8ecf1; --muted:#9aa5b1; --line:#2c3541; --bg:#10151b; --card:#171e26; --good:#5fd18b; --bad:#f0a070; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; position:relative; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.1rem; margin:28px 0 8px; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  table { width:100%; border-collapse:collapse; margin:8px 0; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin:12px 0; }
+  .big { font-size:1.6rem; font-weight:700; } .save { color:var(--good); } .cost { color:var(--bad); }
+  .flag { font-size:.9rem; padding:4px 8px; margin:4px 0; border-left:4px solid var(--line); background:var(--card); }
+  .flag.BLOCK { border-color:#b91c1c; } .flag.WARN { border-color:#d97706; }
+  .draft { position:fixed; inset:0; display:grid; place-items:center; font-size:7rem; font-weight:800;
+           color:rgba(185,28,28,.14); transform:rotate(-20deg); pointer-events:none; }
+  .controls { margin:12px 0; } @media print { .controls { display:none; } }
+</style>
+</head>
+<body>
+<main>
+{% if draft %}<div class="draft">DRAFT</div>{% endif %}
+<div class="controls">
+  <a href="?view={{ 'staff' if view == 'customer' else 'customer' }}{{ query }}">Switch to {{ 'staff' if view == 'customer' else 'customer' }} view</a>
+  · <a href="#" onclick="window.print();return false">Print / save as PDF</a>
+</div>
+<h1>{{ brand.name }}: savings comparison</h1>
+<p class="muted">Prepared {{ today }}{% if partner %} by {{ partner }}{% endif %}
+  {% if view == 'staff' %}· STAFF VIEW{% endif %}</p>
+<p>{{ facts.customer_name or '' }}<br><span class="muted">{{ facts.service_address or '' }}</span></p>
+
+{% for sq in q.services %}
+<h2>{{ 'Electricity' if sq.commodity == 'electricity' else 'Natural gas' }}
+  <span class="muted">· site {{ mask(sq.site_id) if view == 'customer' else (sq.site_id or '?') }}</span></h2>
+
+<div class="card">
+  {% if sq.diff >= 0 %}
+    <div class="big save">You would have saved {{ money(sq.diff) }} on this bill</div>
+  {% else %}
+    <div class="big cost">On this bill, your current plan is cheaper by {{ money(-sq.diff) }}</div>
+  {% endif %}
+  <div class="muted">Same usage, same days, GST included. Over the {{ sq.days }}-day period, {{ "{:,.2f}".format(sq.usage) }} {{ sq.unit }}.</div>
+</div>
+
+<table>
+  <tr><th></th><th class="n">Your current plan</th><th class="n">{{ sq.offer.name }}</th></tr>
+  <tr><td>Energy rate</td><td class="n">{{ rate(sq.current_rate_eff, sq) }}</td><td class="n">{{ rate(sq.offer.energy_rate, sq) }}</td></tr>
+  <tr><td>Energy charge</td><td class="n">{{ money(sq.current_energy) }}</td><td class="n">{{ money(sq.offer_energy) }}</td></tr>
+  <tr><td>Admin fee</td><td class="n">{{ money(sq.current_admin) }}</td><td class="n">{{ money(sq.offer_admin) }}</td></tr>
+  <tr><th>Retailer lines, before GST</th><th class="n">{{ money(sq.current_energy + sq.current_admin) }}</th><th class="n">{{ money(sq.offer_energy + sq.offer_admin) }}</th></tr>
+</table>
+
+<p>Over 12 months: <strong>{{ money(sq.annual_diff) if sq.annual_diff >= 0 else '−' ~ money(-sq.annual_diff) }}</strong>
+  {{ 'saved' if sq.annual_diff >= 0 else '(your current plan would be cheaper)' }}.
+  <span class="muted">{{ sq.annual_method }} Assumes your current rate stays the same for 12 months.</span></p>
+<p class="muted">{{ sq.offer.name }}, {{ sq.offer.term_months }}-month term.
+  {% if sq.offer.terms_url %}<a href="{{ sq.offer.terms_url }}">Terms</a>{% endif %}</p>
+{% endfor %}
+
+<h2>What doesn't change</h2>
+<p>Only two lines on your bill come from your retailer: the energy charge and the admin fee. Delivery,
+  riders and the local access fee (or municipal franchise fee) are the same whichever retailer you choose.
+  <span class="muted">(Utilities Consumer Advocate, "How to read your bill".)</span></p>
+{% if q.credits_excluded %}<p class="muted">Promotional credits of {{ money(q.credits_excluded) }} on your bill are not included in this comparison.</p>{% endif %}
+
+<p class="muted">This is an estimate based on the bill you provided, not a guarantee. Your actual
+  charges depend on your usage and on the terms of the offer you choose.</p>
+
+{% if view == 'staff' %}
+<h2>Flags (staff only)</h2>
+{% for f in flags %}<div class="flag {{ f.severity }}"><strong>{{ f.severity }} {{ f.id }}</strong> {{ f.field }}: {{ f.message }}</div>
+{% else %}<p class="muted">No flags.</p>{% endfor %}
+{% if edits %}<h2>Edits by reviewer</h2>
+{% for e in edits %}<div class="flag">{{ e.field }}: {{ e.model_value }} → {{ e.new_value }} ({{ e.at }})</div>{% endfor %}{% endif %}
+{% endif %}
+</main>
+</body>
+</html>

@@ -108,3 +108,15 @@ def test_bad_site_id_blocks_enrolment_not_quote(client):
     assert client.post(f"/bill/{sha}/review", data=data).status_code == 303
     assert client.get(f"/bill/{sha}/quote").status_code == 200
     assert client.post(f"/bill/{sha}/enrol", data={}).status_code == 400
+
+
+def test_upload_of_an_already_read_bill_still_gets_page_images(client):
+    import hashlib
+    login(client)
+    blob = Path("samples/01_elec_clean.pdf").read_bytes()
+    sha = hashlib.sha256(blob).hexdigest()[:12]
+    seed(client, "01_elec_clean", sha=sha)
+    (client.tmp / "bills" / sha / "pages").rmdir()
+    r = client.post("/upload", files=[("files", ("b.pdf", blob, "application/pdf"))])
+    assert r.status_code == 303
+    assert client.get(f"/bill/{sha}/page/1.png").status_code == 200

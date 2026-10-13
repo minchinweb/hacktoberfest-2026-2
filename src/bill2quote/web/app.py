@@ -75,13 +75,18 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
 
     # -- upload and read -------------------------------------------------------------
 
+    def ensure_pages(d: Path, paths: list[Path]):
+        """Page images for the review screen; written once, whether or not the read is cached."""
+        pages = ingest.load_pages(paths, cfg.models["max_pages"], cfg.models["max_image_side"])
+        (d / "pages").mkdir(exist_ok=True)
+        for i, im in enumerate(pages, 1):
+            im.save(d / "pages" / f"page-{i}.png")
+        return pages
+
     def read_in_background(sha: str, paths: list[Path]) -> None:
         d = store.bill_dir(sha, data)
         try:
-            pages = ingest.load_pages(paths, cfg.models["max_pages"], cfg.models["max_image_side"])
-            (d / "pages").mkdir(exist_ok=True)
-            for i, im in enumerate(pages, 1):
-                im.save(d / "pages" / f"page-{i}.png")
+            pages = ensure_pages(d, paths)
             facts, meta = extract.extract(pages, cfg.models["extract"], cfg.models["ollama_host"],
                                           cfg.models["num_ctx"], cfg.models["num_predict"])
             store.save_model_facts(d, facts, {k: v for k, v in meta.items() if k != "raw"})
@@ -103,7 +108,10 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
             p.write_bytes(blob)
             paths.append(p)
         (d / "ref.txt").write_text(ref, encoding="utf-8")
-        if store.load_facts(d) is None and status.get(sha) != "reading":
+        if store.load_facts(d) is not None:
+            if not (d / "pages").exists():
+                ensure_pages(d, paths)
+        elif status.get(sha) != "reading":
             status[sha] = "reading"
             threading.Thread(target=read_in_background, args=(sha, paths), daemon=True).start()
         return RedirectResponse(f"/bill/{sha}/wait", 303)

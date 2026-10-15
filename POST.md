@@ -100,11 +100,11 @@ Qwen is ahead on both sets, but it always thinks (the `think: false` flag has no
 
 I built this with Claude Code from a written spec, in two sessions. The first took the spec to a working pipeline: scaffold, checks, ingest, extraction, quote math, the web review flow and tests.
 
-{% agent_session bill2quote-part-1-from-a-written-spec-to-a-working-pipeline-in-one-session-pt3jze %}
+{% agent_session bill2quote-part-1-from-a-written-spec-to-a-working-pipeline-in-one-session-vclf52 %}
 
 The second is the last two days: real phone photos, the plausibility checks, the override, and the demo.
 
-{% agent_session bill2quote-part-2-real-phone-photos-plausibility-checks-and-the-demo-uvdnbn %}
+{% agent_session bill2quote-part-2-real-phone-photos-plausibility-checks-and-the-demo-6jcbs6 %}
 
 Two moments worth pointing at. In the first session, Qwen came back with empty output; reading the raw response showed its thinking was eating the whole token budget, so the fix was a bigger budget, not a prompt change. In the second, I confirmed a bill that still had a wrong usage and energy charge and got a quote saying my current plan was cheaper by $4,072. That is where C19 and the override came from.
 

@@ -30,6 +30,37 @@ class ExtractError(RuntimeError):
     pass
 
 
+def _normalise_json_payload(raw: str) -> str:
+    """Strip common LLM wrappers such as ```json fences or trailing commentary."""
+    text = (raw or "").strip()
+    if not text:
+        return text
+
+    # Strip Markdown code fences: ```json ... ``` or ``` ... ```
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            first = lines[0].strip().lower()
+            if first.startswith("```json") or first.startswith("```javascript"):
+                lines = lines[1:]
+            elif first.startswith("```"):
+                lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+
+    # If the model adds a JSON-like prefix, drop it.
+    if text.lower().startswith("json") and len(text) > 4 and text[4].isspace():
+        text = text[4:].lstrip()
+
+    # Find the first JSON object and the matching closing brace to ignore any surrounding chatter.
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end > start:
+        return text[start : end + 1]
+    return text
+
+
 def extract(pages: list[Image.Image], model: str, host: str,
             num_ctx: int = 16384, num_predict: int = 8192) -> tuple[BillFacts, dict]:
     """One request with all pages. Returns (facts, meta). Raises ExtractError on bad output."""
@@ -50,9 +81,10 @@ def extract(pages: list[Image.Image], model: str, host: str,
         raise ExtractError(f"Ollama request failed: {e}") from e
     seconds = round(time.monotonic() - t0, 1)
     raw = r.json().get("message", {}).get("content", "")
+    payload = _normalise_json_payload(raw)
     meta = {"model": model, "prompt_version": PROMPT_VERSION, "seconds": seconds, "raw": raw}
     try:
-        return BillFacts.model_validate_json(raw), meta
+        return BillFacts.model_validate_json(payload), meta
     except ValueError as e:
         meta["error"] = str(e)
         raise ExtractError(f"model output did not match the schema: {e}") from e

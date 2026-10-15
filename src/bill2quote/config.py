@@ -28,6 +28,7 @@ DEFAULTS: dict[str, Any] = {
         "period_days_range": [20, 40],
         "money_tolerance": "0.02",
         "pct_tolerance": "0.005",
+        "implausible_ratio": "3",
     },
     "annualize": {"gas_base_fraction": "0.15", "hdd_monthly": []},
     "offer": [],
@@ -79,6 +80,10 @@ class Config:
     @property
     def pct_tol(self) -> Decimal:
         return Decimal(self.checks["pct_tolerance"])
+
+    @property
+    def implausible_ratio(self) -> Decimal:
+        return Decimal(self.checks["implausible_ratio"])
 
     def offer(self, offer_id: str) -> Offer:
         for o in self.offers:

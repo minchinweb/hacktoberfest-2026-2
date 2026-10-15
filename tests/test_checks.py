@@ -43,6 +43,18 @@ def test_c01_fires_on_mismatch():
     assert "C01" in ids(bill({"energy_charge": 80.0}))
 
 
+def test_c01_far_apart_blocks_but_modest_gap_only_warns():
+    sev = lambda charge: next(f.severity for f in check_bill(bill({"energy_charge": charge}), CFG)
+                              if f.id == "C01")
+    assert sev(80.0) == WARN      # 1.6x: could be a tiered rate
+    assert sev(5.0) == BLOCK      # a tenth: a number was misread
+    assert sev(500.0) == BLOCK    # ten times
+
+
+def test_c12_usage_must_be_positive():
+    assert "C12" in ids(bill({"usage": 0.0}))
+
+
 def test_c01_missing_value_is_silent():
     assert "C01" not in ids(bill({"energy_charge": None}))
 

@@ -106,7 +106,7 @@ Verified against the Utilities Consumer Advocate (UCA) and EPCOR on 2026-10-13. 
 2. Tap **Snap bill** (`<input type=file accept="image/*,application/pdf" capture="environment" multiple>`). Take one or more pages.
 3. A "Reading your bill…" page polls every 2 s. Reading takes roughly 5–60 s.
 4. Review screen: bill image on the left (pinch to zoom); fields on the right; flagged fields in amber or red with the reason. Fix what's wrong, tick **I checked the flagged fields**, then tap **Confirm**.
-5. Quote page: pick an offer from the dropdown and toggle **Customer view**. Print or share the PDF.
+5. Quote page: pick an offer from the dropdown and toggle **Customer view**. Print or share the PDF. If a number is wrong, tap **Edit numbers and re-run**: the review form reopens with the saved values and the offer choices kept, and saving it runs the checks and the comparison again. A comparison that fails a blocking check (C19) is not shown at all; the page offers the way back to the form.
 6. Tap **Add to enrolment list**.
 
 **B. Office batch**
@@ -285,7 +285,7 @@ Each check returns zero or more `Flag(id, severity, field, message)`. Severities
 
 | ID | Check | Severity |
 |---|---|---|
-| C01 | `energy_charge ≈ usage × energy_rate` (within max($0.02, 0.5%)); a mismatch can mean a tiered or blended rate | WARN |
+| C01 | `energy_charge ≈ usage × energy_rate` (within max($0.02, 0.5%)); a small mismatch can mean a tiered or blended rate | WARN; BLOCK when the two are more than `implausible_ratio` (3) times apart, which no tiered rate explains |
 | C02 | `days` consistent with the period dates (accept inclusive or exclusive counting) | WARN |
 | C03 | `admin_fee ≈ admin_fee_rate × days` when per-day | WARN |
 | C04 | Electricity: `(meter_current − meter_previous) × multiplier ≈ usage` | WARN |
@@ -303,6 +303,7 @@ Each check returns zero or more `Flag(id, severity, field, message)`. Severities
 | C16 | Same site and period already processed | INFO |
 | C17 | `site_id` equals `account_number` (the model put the account number in the wrong field) | BLOCK for enrolment |
 | C18 | On a dual-fuel bill, the electricity and gas site IDs are identical | WARN |
+| C19 | Quote plausibility: for a chosen offer, the retailer's two lines (energy + admin) cost more than `implausible_ratio` (3) times, or less than 1/3 of, the customer's current two lines. A number was probably misread. Runs on the review screen with the default offers, and again on the quote page with the chosen ones | BLOCK |
 
 Every check gets unit tests with a passing case, a failing case and a missing-value case. The whole checks module runs with no model.
 

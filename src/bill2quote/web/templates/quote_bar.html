@@ -15,5 +15,5 @@
 <form class="bar" method="post" action="/bill/{{ sha }}/enrol">
   <input type="hidden" name="elec" value="{{ elec }}"><input type="hidden" name="gas" value="{{ gas }}">
   {% if blocked_enrol %}<span>Enrolment blocked: fix the site IDs on the review screen.</span>{% else %}<button>Add to enrolment list</button>{% endif %}
-  · <a href="/bill/{{ sha }}/review">Back to review</a> · <a href="/">Next bill</a>
+  · <a href="/bill/{{ sha }}/review{{ '?' ~ back_qs if back_qs }}">Edit numbers and re-run</a> · <a href="/">Next bill</a>
 </form>

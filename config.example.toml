@@ -27,6 +27,7 @@ gas_factor_range = [0.030, 0.045]       # GJ per m3; a deliberately loose sanity
 period_days_range = [20, 40]
 money_tolerance = "0.02"
 pct_tolerance = "0.005"
+implausible_ratio = "3"                 # C01/C19: refuse figures this many times apart (or 1/this)
 
 [annualize]
 gas_base_fraction = "0.15"              # non-heating share of annual gas; an assumption

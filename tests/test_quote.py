@@ -56,3 +56,19 @@ def test_hdd_shares_over_a_year_sum_to_one():
     hdd = [900, 750, 650, 400, 200, 80, 30, 50, 200, 450, 700, 880]
     total = hdd_share(date(2026, 1, 1), 365, hdd, Decimal("0.15"))
     assert abs(total - 1) < Decimal("0.0001")
+
+
+def test_c19_blocks_an_implausible_comparison():
+    from bill2quote.checks import BLOCK
+    from bill2quote.quote import quote_flags
+    facts = truth("02_gas_clean")
+    facts.services[0].usage = 981.4  # the m3 figure read as GJ: the mistake seen in a real photo
+    flags = quote_flags(build_quote(facts, CFG), CFG)
+    assert [f.id for f in flags] == ["C19"] and flags[0].severity == BLOCK
+
+
+def test_c19_is_silent_on_every_sample_bill():
+    from bill2quote.quote import quote_flags
+    for name in ("01_elec_clean", "02_gas_clean", "03_dual_fuel_2page", "05_estimated_read",
+                 "06_credit_dual_fuel", "07_inconsistent", "08_already_cheaper"):
+        assert quote_flags(build_quote(truth(name), CFG), CFG) == [], name

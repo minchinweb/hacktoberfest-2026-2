@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>This comparison can't be shown yet</h1>
+<p>The numbers behind it don't hold together, so no quote has been made. Nothing here is for the customer.</p>
+{% for f in flags %}<div class="err"><strong>{{ f.id }}</strong> {{ f.field }}: {{ f.message }}</div>{% endfor %}
+<p><a class="btn" href="/bill/{{ sha }}/review{{ '?' ~ qs if qs }}">Fix the numbers and re-run</a>
+  {% if offers_chosen %}<a class="btn alt" href="/bill/{{ sha }}/quote">Use the default offers instead</a>{% endif %}</p>
+<p class="muted">The review form keeps what you entered. Saving it runs the checks and the comparison again.</p>
+{% endblock %}

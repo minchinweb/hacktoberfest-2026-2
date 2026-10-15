@@ -120,3 +120,43 @@ def test_upload_of_an_already_read_bill_still_gets_page_images(client):
     r = client.post("/upload", files=[("files", ("b.pdf", blob, "application/pdf"))])
     assert r.status_code == 303
     assert client.get(f"/bill/{sha}/page/1.png").status_code == 200
+
+
+def test_misread_usage_is_refused_then_fixed_and_the_comparison_reruns(client):
+    login(client)
+    sha, truth = seed(client, "02_gas_clean")
+    # The m3 figure in the GJ field; every other field right. Charge no longer matches usage x rate.
+    bad = form_for(truth, **{"s0.usage": "981.4"})
+    r = client.post(f"/bill/{sha}/review", data=bad)
+    assert r.status_code == 200 and "Fix the red fields" in r.text and "C01" in r.text
+    assert not (client.tmp / "bills" / sha / "facts.reviewed.json").exists()
+    # Back on the form with the correct usage, the comparison runs.
+    r = client.post(f"/bill/{sha}/review", data=form_for(truth), follow_redirects=False)
+    assert r.status_code == 303
+    assert "You would have saved" in client.get(f"/bill/{sha}/quote").text
+
+
+def test_quote_page_never_shows_an_implausible_comparison(client):
+    login(client)
+    sha, truth = seed(client, "02_gas_clean")
+    s = truth.services[0]
+    s.usage, s.energy_rate, s.energy_rate_unit = 981.4, None, None  # no printed rate: C01 can't fire
+    store.save_reviewed(store.bill_dir(sha, client.tmp), truth, [])
+    html = client.get(f"/bill/{sha}/quote?view=customer&gas=gas-fixed-3y").text
+    assert "can't be shown yet" in html and "C19" in html
+    assert "You would have saved" not in html and "cheaper by" not in html
+    assert "/bill/" + sha + "/review?gas=gas-fixed-3y" in html  # the way back keeps the offer choice
+
+
+def test_edit_numbers_and_rerun_keeps_offer_choices(client):
+    login(client)
+    sha, truth = seed(client, "01_elec_clean")
+    client.post(f"/bill/{sha}/review", data=form_for(truth))
+    html = client.get(f"/bill/{sha}/quote?elec=elec-fixed-3y&annual_elec=7000").text
+    assert "Edit numbers and re-run" in html
+    form = client.get(f"/bill/{sha}/review?elec=elec-fixed-3y&annual_elec=7000")
+    assert form.status_code == 200 and "70.32" in form.text  # shows the saved numbers
+    r = client.post(f"/bill/{sha}/review?elec=elec-fixed-3y&annual_elec=7000",
+                    data=form_for(truth, **{"s0.admin_fee": "9.0"}))
+    assert r.status_code == 303
+    assert "elec=elec-fixed-3y" in r.headers["location"] and "annual_elec=7000" in r.headers["location"]

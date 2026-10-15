@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 
 from .annualize import annual_usage
-from .checks import rate_per_unit
+from .checks import BLOCK, Flag, rate_per_unit
 from .config import Config, Offer
 from .schema import BillFacts, Service
 
@@ -82,6 +82,28 @@ def quote_service(s: Service, offer: Offer, cfg: Config,
         days=days, current_energy=energy, current_admin=admin, current_rate_eff=rate_eff,
         offer_energy=offer_energy, offer_admin=offer_admin, diff_pre_gst=diff_pre,
         diff=diff_pre * gst, annual_usage=annual_u, annual_method=method, annual_diff=annual_diff)
+
+
+def quote_flags(q: Quote, cfg: Config) -> list[Flag]:
+    """C19: refuse a comparison whose two sides are implausibly far apart.
+
+    The retailer's two lines cannot sensibly cost several times more, or a fraction, of the
+    customer's current ones. When they do, a number on the bill was misread; a quote built on it
+    would be nonsense, so it is blocked rather than shown.
+    """
+    limit = cfg.implausible_ratio
+    out: list[Flag] = []
+    for i, sq in enumerate(q.services):
+        cur, off = sq.current_energy + sq.current_admin, sq.offer_energy + sq.offer_admin
+        if cur <= 0 or off <= 0:
+            continue
+        if not 1 / limit <= off / cur <= limit:
+            out.append(Flag(
+                "C19", BLOCK, f"services[{i}].usage",
+                f"{sq.commodity}: on {sq.offer.name} the same usage would cost {off:,.2f} against "
+                f"{cur:,.2f} now. Real offers are rarely that far apart, so usage, rate or charge "
+                "was probably misread."))
+    return out
 
 
 def build_quote(facts: BillFacts, cfg: Config, offer_ids: dict[str, str] | None = None,

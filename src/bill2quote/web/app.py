@@ -14,6 +14,7 @@ import threading
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -143,12 +144,35 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
             return d, None, None
         return d, got[0], json.loads((d / "facts.model.json").read_text(encoding="utf-8"))["facts"]
 
-    def flags_for(facts: BillFacts, sha: str):
-        return check_bill(facts, cfg, store.seen_sites(data, exclude=sha))
+    def quote_inputs(params) -> tuple[dict, dict, str]:
+        """Offer choices and annual-usage overrides from a query string or form, plus the
+        query string that carries them between the review and quote pages."""
+        got = {k: (params.get(k) or "").strip() for k in ("elec", "gas", "annual_elec", "annual_gas")}
+        offer_ids = {c: got[k] for c, k in (("electricity", "elec"), ("gas", "gas")) if got[k]}
+        override = {}
+        for c, k in (("electricity", "annual_elec"), ("gas", "annual_gas")):
+            if got[k]:
+                try:
+                    override[c] = Decimal(got[k].replace(",", ""))
+                except InvalidOperation:
+                    pass
+        qs = urlencode({k: v for k, v in got.items() if v})
+        return offer_ids, override, qs
+
+    def flags_for(facts: BillFacts, sha: str, params=None):
+        """The bill checks, plus the quote plausibility check (C19) once the bill checks pass."""
+        flags = check_bill(facts, cfg, store.seen_sites(data, exclude=sha))
+        if not has_block(flags):
+            offer_ids, override, _ = quote_inputs(params or {})
+            try:
+                flags += quote.quote_flags(quote.build_quote(facts, cfg, offer_ids, override), cfg)
+            except (ArithmeticError, TypeError, ValueError):
+                pass  # a figure the quote cannot use is already flagged by the bill checks
+        return flags
 
     def render_review(request: Request, sha: str, facts: BillFacts, errors: list[str]):
         d = data / "bills" / sha
-        flags = flags_for(facts, sha)
+        flags = flags_for(facts, sha, request.query_params)
         by_field: dict[str, list] = {}
         for f in flags:
             by_field.setdefault(f.field, []).append(f)
@@ -209,7 +233,7 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
                 if m["services"][i][f] != s[f]:
                     edits.append(dict(field=f"services[{i}].{f}", model_value=m["services"][i][f],
                                       new_value=s[f], at=now))
-        flags = flags_for(facts, sha)
+        flags = flags_for(facts, sha, request.query_params)
         if has_block(flags):
             return render_review(request, sha, facts, ["Fix the red fields before confirming."])
         acked = form.get("ack") == "on"
@@ -221,7 +245,10 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         (d / "acked.txt").write_text(str(acked), encoding="utf-8")
         with (data / "log.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps({"at": now, "bill": sha, "edits": edits}) + "\n")
-        return RedirectResponse(f"/bill/{sha}/quote", 303)
+        _, _, qs = quote_inputs(request.query_params)
+        view = request.query_params.get("view", "")
+        qs = "&".join(x for x in (qs, f"view={view}" if view in ("customer", "staff") else "") if x)
+        return RedirectResponse(f"/bill/{sha}/quote" + (f"?{qs}" if qs else ""), 303)
 
     # -- quote and enrol -------------------------------------------------------------
 
@@ -240,15 +267,12 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         if got is None:
             return RedirectResponse(f"/bill/{sha}/review", 303)
         facts, edits = got
-        flags = flags_for(facts, sha)
-        offer_ids = {k: v for k, v in (("electricity", elec), ("gas", gas)) if v}
-        override = {}
-        for k, v in (("electricity", annual_elec), ("gas", annual_gas)):
-            if v.strip():
-                try:
-                    override[k] = Decimal(v.replace(",", ""))
-                except InvalidOperation:
-                    pass
+        params = {"elec": elec, "gas": gas, "annual_elec": annual_elec, "annual_gas": annual_gas}
+        flags = flags_for(facts, sha, params)
+        offer_ids, override, back_qs = quote_inputs(params)
+        if has_block(flags):  # never show a comparison that failed a blocking check
+            return page("quote_blocked.html", sha=sha, flags=[f for f in flags if f.severity == "BLOCK"
+                        and not f.enrol_only], qs=back_qs, offers_chosen=bool(offer_ids))
         q = quote.build_quote(facts, cfg, offer_ids, override)
         d = data / "bills" / sha
         ref = (d / "ref.txt").read_text(encoding="utf-8") if (d / "ref.txt").exists() else ""
@@ -257,7 +281,7 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         html = render.render_quote(facts, q, flags, cfg, view=view if view in ("customer", "staff")
                                    else "customer", partner=ref, edits=edits, query=qs)
         bar = env.get_template("quote_bar.html").render(
-            sha=sha, offers=cfg.offers, elec=elec, gas=gas, annual_elec=annual_elec,
+            sha=sha, back_qs=urlencode({k: v for k, v in {**params, "view": view}.items() if v}), offers=cfg.offers, elec=elec, gas=gas, annual_elec=annual_elec,
             annual_gas=annual_gas, view=view, blocked_enrol=has_block(flags, True))
         (d / f"quote-{view}.html").write_text(html, encoding="utf-8")
         return HTMLResponse(html.replace("<main>", "<main>" + bar, 1))
@@ -268,7 +292,7 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         if got is None:
             return RedirectResponse(f"/bill/{sha}/review", 303)
         facts, _ = got
-        flags = flags_for(facts, sha)
+        flags = flags_for(facts, sha, {"elec": elec, "gas": gas})
         if has_block(flags, for_enrolment=True):
             return HTMLResponse("Blocking flag: fix site IDs on the review screen first.", 400)
         d = data / "bills" / sha

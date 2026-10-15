@@ -68,8 +68,12 @@ def check_service(i: int, s: Service, facts: BillFacts, cfg: Config) -> list[Fla
     # C12 missing quote-critical values
     if s.usage is None:
         f.append(Flag("C12", BLOCK, _where(i, "usage"), f"{lab}: usage is missing."))
+    elif D(s.usage) <= 0:
+        f.append(Flag("C12", BLOCK, _where(i, "usage"), f"{lab}: usage must be more than zero."))
     if s.days is None:
         f.append(Flag("C12", BLOCK, _where(i, "days"), f"{lab}: days is missing."))
+    elif s.days <= 0:
+        f.append(Flag("C12", BLOCK, _where(i, "days"), f"{lab}: days must be more than zero."))
     if s.energy_charge is None and s.energy_rate is None:
         f.append(Flag("C12", BLOCK, _where(i, "energy_charge"),
                       f"{lab}: energy charge and rate are both missing."))
@@ -101,9 +105,16 @@ def check_service(i: int, s: Service, facts: BillFacts, cfg: Config) -> list[Fla
     rate = rate_per_unit(s)
     u, ch = D(s.usage), D(s.energy_charge)
     if u is not None and rate is not None and ch is not None and not close(ch, u * rate, cfg):
-        f.append(Flag("C01", WARN, _where(i, "energy_charge"),
-                      f"{lab}: charge {ch} ≠ usage {u} × rate {rate} = "
-                      f"{(u * rate).quantize(CENT)}. May be a tiered or blended rate."))
+        exp = u * rate
+        shown = (f"{lab}: charge {ch} ≠ usage {u} × rate {rate} = {exp.quantize(CENT)}.")
+        if exp > 0 and ch > 0 and not (1 / cfg.implausible_ratio <= ch / exp <= cfg.implausible_ratio):
+            # No tiered or blended rate explains a gap this big: a number was misread.
+            f.append(Flag("C01", BLOCK, _where(i, "energy_charge"),
+                          f"{shown} They are more than {cfg.implausible_ratio}× apart, so usage, "
+                          "rate or charge was misread."))
+        else:
+            f.append(Flag("C01", WARN, _where(i, "energy_charge"),
+                          f"{shown} May be a tiered or blended rate."))
 
     # C02 days vs period dates (inclusive or exclusive counting)
     span = _days_between(s.period_start, s.period_end)

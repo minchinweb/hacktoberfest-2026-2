@@ -29,7 +29,7 @@ The clip is the real flow on my Pixel 7, with the slow parts sped up. I photogra
 
 ## Code
 
-https://github.com/minchinweb/hacktoberfest-2026-2
+{% embed https://github.com/minchinweb/hacktoberfest-2026-2 %}
 
 Python 3.11+, FastAPI, Jinja2, pypdfium2, Pillow, Ollama. No build step, no database, no hosted API. `bill2quote batch DIR` for the office, `bill2quote serve` for the phone.
 

@@ -4,21 +4,11 @@ published: false
 tags: devchallenge, hf26challenge, gemma, python
 ---
 
-<!--
-DRAFT NOTES (delete before publishing)
-Everything below is written from what exists in the repo today. Items still to fill, all marked [TODO]:
-  1. Demo GIF/video (phone photo -> review screen with one flagged field -> customer quote).
-  2. "My First User": the timed session in SPEC §13 has NOT happened. No timings or verdict are invented here.
-  3. Agent session slug for the {% agent_session %} tag.
-  4. Re-check the UCA link and any regulatory claim the day you publish.
-Stay anonymous: no company, partner or deal names. The demo brand and offers are fictional.
--->
-
 *This is a submission for the Hacktoberfest Open-Source AI Challenge Week 2: Side Hustle.*
 
 ## What I Built
 
-I run a small electricity and natural gas retailer in Alberta. Every new customer starts the same way: someone looks at their current bill, works out whether switching would save them money, and then types the site IDs, name and address into an enrolment form. A referral partner can bring in hundreds of homes at a time, and many of those homes have two sites, one for power and one for gas. That is a lot of squinting at photographs of bills.
+I run a small utility retailer in Alberta. Many new customer starts the same way: someone looks at their current bill, works out whether switching would save them money, and then types the site IDs, name and address into an enrolment form. A referral partner can bring in hundreds of homes at a time, and many of those homes have two sites, one for power and one for gas. That is a lot of squinting at photographs of bills.
 
 **bill2quote** turns a photo or PDF of a utility bill into two things:
 
@@ -31,9 +21,11 @@ The insight that makes this tractable: of the dozens of lines on an Alberta bill
 
 ## Demo
 
-[TODO: GIF or short video. A printed-and-photographed bill reads best on camera: phone photo, then the review screen with one amber field, then the customer view.]
+![bill2quote on a phone: photo of a bill in, red checks, fix the numbers, quote out](https://raw.githubusercontent.com/minchinweb/hacktoberfest-2026-2/master/docs/demo.gif)
 
-Every bill in this post and in the repo is synthetic. The retailer, people, addresses, account numbers and site IDs are all invented.
+The clip is the real flow on my Pixel 7, with the slow parts sped up. I photograph a printed bill, a local model reads it, and the review screen shows what doesn't add up. Two red checks block the quote until I fix the numbers, then the comparison appears, and "Edit numbers and re-run" fixes a last warning. The final screen is the enrolment list.
+
+**N.B.**: Every bill in this post and in the repo is synthetic. The retailer, people, addresses, account numbers and site IDs are all invented.
 
 ## Code
 
@@ -47,7 +39,7 @@ Python 3.11+, FastAPI, Jinja2, pypdfium2, Pillow, Ollama. No build step, no data
 
 The rule I wrote at the top of the spec and kept to: the model transcribes what is printed and never calculates, converts or corrects anything. A suspect number is flagged and shown to a person, never quietly fixed.
 
-The model gets one request per bill with every page attached, a JSON schema, temperature 0 and thinking off. Every field in the schema is required but nullable, so the output is either complete or rejected, and "I couldn't read it" is an answer the model is allowed to give. That is a lesson from Week 1: letting a small model omit fields produced confident, plausible, wrong output.
+The model gets one request per bill with every page attached, a JSON schema, temperature 0 and thinking off (to encourage deterministic processing). Every field in the schema is required but nullable, so the output is either complete or rejected, and "I couldn't read it" is an answer the model is allowed to give. That is a lesson from [Week 1](https://dev.to/minchinweb/roadbean-say-it-in-the-car-get-it-in-the-ledger-pf5), where every field was required too, and where the most useful failure was a garbled odometer reading that the pipeline happily booked as a plausible 642 km trip.
 
 Then 20 deterministic checks run, each returning a flag with a severity. A few of them:
 
@@ -65,10 +57,10 @@ Blocking flags stop a customer quote. Warnings must be acknowledged on the revie
 
 I generated eight synthetic bills across three layouts (a one-page table, a summary plus detail page, and a two-column dual-fuel statement) with varied wording, plus a Pillow "phone photo" of one of them: rotated, in perspective, shadowed, JPEG at quality 60. Ground truth comes from the same data that rendered each bill. Two models, same prompt, same bills:
 
-| Model | Bills with every quote-critical field right | Valid output | Seconds per bill |
+| Model | Bills with every quote-critical field right | Valid output | Processing time per bill |
 |---|---|---|---|
-| Gemma 4 e4b | 5 of 8 | 8 of 8 | about 9 |
-| Qwen3-VL 8b | 7 of 8 | 7 of 8 | about 73 |
+| Gemma 4 e4b | 5 of 8 | 8 of 8 | about 9s |
+| Qwen3-VL 8b | 7 of 8 | 7 of 8 | about 73s |
 
 "Quote-critical" means usage, days, energy charge or rate, and admin fee. Field-level accuracy was 95% for Gemma and 97% for Qwen, which sounds great and is exactly the wrong number to look at: one wrong digit in the one field that matters is a wrong quote.
 
@@ -78,7 +70,7 @@ I generated eight synthetic bills across three layouts (a one-page table, a summ
 
 I then printed the bills and photographed them with a Pixel 7 on a table: some tilted, one with my finger over part of the page, bill 03 as two photos. Seven bills, scored separately from the table above, which still includes the simulated photo. Same prompt, same models:
 
-| Model | Bills with every quote-critical field right | Valid output | Seconds per bill |
+| Model | Bills with every quote-critical field right | Valid output | Processing time per bill |
 |---|---|---|---|
 | Gemma 4 e4b | 3 of 7 | 7 of 7 | about 10 |
 | Qwen3-VL 8b | 5 of 7 | 5 of 7 | about 72 |
@@ -91,7 +83,7 @@ Qwen is ahead on both sets, but it always thinks (the `think: false` flag has no
 
 ### Honest limits
 
-- **Every bill here is synthetic**, printed and photographed. None is a real customer's bill. Real retailer layouts are the next test and I expect them to be harder. Seven photos is a small sample. The photos are in `samples/photos/` with the location data stripped, and the results are in `docs/eval/photos/`.
+- **Every bill here is synthetic**, printed and photographed. None is a real customer's bill. Real retailer layouts are the next test -- all different layouts, not nearly as clear (colour and contrast), extra text (up ot 7 pages each) -- and I expect them to be harder. Seven photos is a small sample. The photos are in `samples/photos/`, and the results are in `docs/eval/photos/`.
 - The printed bills I photographed were made before I fixed the generator's "Electricity Supply" label on gas bills, so photos 02 and 08 carry the old label. The PDF eval uses the fixed bills.
 - A frontier hosted model would probably read a blurry phone photo better. That is a real cost of staying local.
 - The 12-month estimate for gas is a rough days-scaling, labelled as such on the page, until I add heating-degree-day data. Per-bill numbers get top billing for that reason.
@@ -99,22 +91,28 @@ Qwen is ahead on both sets, but it always thinks (the `think: false` flag has no
 
 ## Why Does Open Innovation Matter?
 
-- **The data is sensitive in a specific way.** A bill carries a name, a service address, an account number and a site ID. A site ID is the meter's identity in the market and most of what's needed to enrol a site. Sending a stack of those to a hosted API is the wrong default for a business that handles thousands. Here the bills never leave the machine.
+- **The data is sensitive in a specific way.** A bill carries a name, a service address, an account number, and a site ID. A site ID is the "address", the identity in the market and most of what's needed to enrol a site. Sending a stack of those to a hosted API is the wrong default for a business that handles thousands. Here the bills never leave the machine.
 - **No meter running.** Reading a thousand multi-page bills costs nothing per page, and re-reading them after a prompt change is free. The eval above would have been a line item on an API invoice.
 - **The model is a config value, and I can measure it.** Swapping Gemma for Qwen was one flag, and the table above is the result. The choice of model rests on numbers, not on a vendor's say-so.
 - **Room to specialise.** Alberta bills are a narrow layout family. That is the kind of place a small model could later be fine-tuned. Not this week, but it's possible, which is the point.
 
 ## My Agent Session
 
-{% agent_session [TODO: slug] %}
+I built this with Claude Code from a written spec, in two sessions. The first took the spec to a working pipeline: scaffold, checks, ingest, extraction, quote math, the web review flow and tests.
 
-I built this with Claude Code from a written spec, working milestone by milestone. [TODO: one or two sentences on a moment worth pointing at. A candidate from the session: the first Qwen run scored 0 of 8 because it returned empty output, and the fix was a token budget, not a prompt change.]
+{% agent_session bill2quote-part-1-from-a-written-spec-to-a-working-pipeline-in-one-session-pt3jze %}
+
+The second is the last two days: real phone photos, the plausibility checks, the override, and the demo.
+
+{% agent_session bill2quote-part-2-real-phone-photos-plausibility-checks-and-the-demo-uvdnbn %}
+
+Two moments worth pointing at. In the first session, Qwen came back with empty output; reading the raw response showed its thinking was eating the whole token budget, so the fix was a bigger budget, not a prompt change. In the second, I confirmed a bill that still had a wrong usage and energy charge and got a quote saying my current plan was cheaper by $4,072. That is where C19 and the override came from.
 
 ## My First User
 
 My first user is me, as the retailer: internal use by the buyer, which is a weaker test than an outside customer, but the retailer is the one who pays. The full notes are in `docs/first-user.md`.
 
-I reviewed the seven printed bills by hand and quoted the comparison, then ran the tool on two of them. Enrolment is extra time in both cases and isn't counted, since I have no way to automate it yet. All seven bills are in one basic layout with no extra text, so reading them by eye is easy and fast. That flatters the manual side.
+I reviewed the seven printed bills by hand and quoted the comparison, then ran the tool on two of them. Enrolment is extra time in both cases and isn't counted in either case, since I have no way to automate it yet. All seven bills are in one basic layout with no extra text, so reading them by eye is easy and fast. That flatters the manual side.
 
 - **Manual:** 17 minutes 44 seconds for seven bills, about 2 min 32 s each.
 - **With bill2quote:** about 1 min 02 s for a bill that read cleanly, and about 3 min 09 s for one the model misread badly and I had to correct field by field. The mean of those two is about 2 min 06 s. Those were demo recordings, not a stopwatch session, so I'm not making a speed claim beyond this: a little faster on average, much faster when the read is clean, slower when it isn't.

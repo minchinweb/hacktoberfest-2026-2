@@ -112,14 +112,15 @@ I built this with Claude Code from a written spec, working milestone by mileston
 
 ## My First User
 
-[TODO: the SPEC §13 session. Not yet done, so nothing is claimed here.]
+My first user is me, as the retailer: internal use by the buyer, which is a weaker test than an outside customer, but the retailer is the one who pays. The full notes are in `docs/first-user.md`.
 
-My first user is me, as the retailer: internal use by the buyer, which is a weaker test than an outside customer. I'll time a quote and enrolment record done the current way for two printed synthetic bills, then the same two plus the planted-error bill with the tool, and report both timings, every hesitation, whether the planted error was caught, and my honest answer to "would the business pay for this, and how?"
+I reviewed the seven printed bills by hand, then ran the tool on two of them. All seven are in one basic layout with no extra text, so reading them by eye is easy and fast. That flatters the manual side.
 
-- Manual, per bill: [TODO]
-- With bill2quote, per bill: [TODO]
-- Planted error caught: [TODO]
-- Verdict as the buyer: [TODO]
+- **Manual:** 17 minutes 44 seconds for seven bills, about 2 min 32 s each.
+- **With bill2quote:** about 1 min 42 s for a bill that read cleanly, and about 4 min 37 s for one the model misread badly and I had to correct field by field. The mean of those two is about 3 min 10 s. Those were demo recordings, not a stopwatch session, and they include a quote, the staff view and a print-to-PDF dialog, so I am not claiming the tool was faster. On these bills it was not.
+- **What I caught that the tool didn't:** a $25 promotional discount on one bill, which I need to discuss with the client, and that none of the bills carried a balance forward. A balance carried forward is a credit-risk signal, and we might not want that customer. The tool reads credits and lists them as an informational note, but it never reads the previous balance at all.
+- **What the tool flags that I missed:** I did not see any of the issues it would have flagged. On these bills that is the planted $20 error in the energy charge on bill 07 (C01), the estimated meter read on bill 05 and the credit on bill 06. I did not run bill 07 through the tool live, so that catch comes from the tests and the eval, not from the session.
+- **Verdict as the buyer:** the benefit for me is that, once properly configured, it can deal with different bill formats, whereas this test was one format I could read by eye. For a partner I would want it to read the previous balance, treat a promotional credit as a conversation with the client, and be tested on real retailer layouts. [TODO: would the business pay for this, and how? The owner's answer goes here.]
 
 ## Prize Categories
 

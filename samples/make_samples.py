@@ -37,7 +37,8 @@ def money(x) -> str:
 LABELS = {
     "plain": dict(energy="Energy Charge", admin="Admin Fee", delivery="Delivery Charges",
                   usage="Usage", rate_cents=True),
-    "alt": dict(energy="Electricity Supply", admin="Retailer Administration Charge",
+    "alt": dict(energy="Electricity Supply", energy_gas="Natural Gas Supply",
+                admin="Retailer Administration Charge",
                 delivery="Transmission & Distribution", usage="Consumption", rate_cents=False),
 }
 
@@ -136,7 +137,8 @@ def service_block(c, s, x, y, lab, right):
         y = line(c, x, y, f"{lab['usage']}", f"{s['usage']:,.2f} GJ", right=right)
         rate = f"${s['energy_rate']:.2f}/GJ"
     y = line(c, x, y, "Rate", rate, right=right)
-    y = line(c, x, y, lab["energy"], money(s["energy_charge"]), right=right)
+    energy_label = lab.get("energy_gas", lab["energy"]) if s["commodity"] == "gas" else lab["energy"]
+    y = line(c, x, y, energy_label, money(s["energy_charge"]), right=right)
     y = line(c, x, y, f"{lab['admin']} (${s['admin_fee_rate']:.2f}/day)",
              money(s["admin_fee"]), right=right)
     y = line(c, x, y, lab["delivery"], money(s["delivery_total"]), right=right)

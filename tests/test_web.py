@@ -63,7 +63,8 @@ def test_planted_error_needs_ack_and_a_fix_is_logged(client):
     assert not (client.tmp / "bills" / sha / "facts.reviewed.json").exists()
     # Reviewer corrects the charge to usage x rate; the edit is recorded.
     fixed = form_for(truth, **{"s0.energy_charge": str(printed - 20)})
-    assert client.post(f"/bill/{sha}/review", data=fixed).status_code == 303  # C01 cleared
+    # C01 is cleared, but the printed subtotal still carries the extra $20 (C20): acknowledge it.
+    assert client.post(f"/bill/{sha}/review", data={**fixed, "ack": "on"}).status_code == 303
     j = json.loads((client.tmp / "bills" / sha / "facts.reviewed.json").read_text())
     edit = next(e for e in j["edits"] if e["field"] == "services[0].energy_charge")
     assert edit["model_value"] == printed and edit["new_value"] == printed - 20
@@ -160,3 +161,63 @@ def test_edit_numbers_and_rerun_keeps_offer_choices(client):
                     data=form_for(truth, **{"s0.admin_fee": "9.0"}))
     assert r.status_code == 303
     assert "elec=elec-fixed-3y" in r.headers["location"] and "annual_elec=7000" in r.headers["location"]
+
+
+def seed_misread(client, **over):
+    """Bill 02 as confirmed in a real session: usage is the m3 figure (981.4) with the GJ unit."""
+    sha, truth = seed(client, "02_gas_clean")
+    return sha, truth, form_for(truth, **{"s0.usage": "981.4", **over})
+
+
+def test_override_needs_a_reason_then_is_saved_and_logged(client):
+    login(client)
+    sha, truth, bad = seed_misread(client)
+    r = client.post(f"/bill/{sha}/review", data=bad)
+    assert r.status_code == 200 and "Override" in r.text      # offered: both blocks are overridable
+    r = client.post(f"/bill/{sha}/review", data={**bad, "override": "on", "override_reason": " "})
+    assert r.status_code == 200 and "Say why" in r.text
+    assert not (client.tmp / "bills" / sha / "override.json").exists()
+    r = client.post(f"/bill/{sha}/review",
+                    data={**bad, "override": "on", "override_reason": "customer on a promo rate"})
+    assert r.status_code == 303
+    saved = json.loads((client.tmp / "bills" / sha / "override.json").read_text())["entries"][0]
+    assert saved["reason"] == "customer on a promo rate" and saved["flags"]
+    assert '"override"' in (client.tmp / "log.jsonl").read_text()
+    staff = client.get(f"/bill/{sha}/quote?view=staff").text
+    assert "Overridden by reviewer (customer on a promo rate)" in staff
+
+
+def test_override_stops_applying_when_a_number_changes(client):
+    login(client)
+    sha, truth, bad = seed_misread(client)
+    client.post(f"/bill/{sha}/review", data={**bad, "override": "on", "override_reason": "ok"})
+    assert client.get(f"/bill/{sha}/quote").status_code == 200
+    # Back on the form, change the usage: the flag text changes, so the override no longer covers it.
+    again = form_for(truth, **{"s0.usage": "900.0"})
+    r = client.post(f"/bill/{sha}/review", data=again)
+    assert r.status_code == 200 and "Fix the red fields" in r.text
+
+
+def test_blocks_that_are_not_overridable_cannot_be_overridden(client):
+    login(client)
+    sha, truth, bad = seed_misread(client, **{"s0.energy_rate_unit": ""})  # unit unknown: C14
+    r = client.post(f"/bill/{sha}/review",
+                    data={**bad, "override": "on", "override_reason": "trust me"})
+    assert r.status_code == 200 and "be overridden" in r.text  # the apostrophe is HTML-escaped
+    assert not (client.tmp / "bills" / sha / "override.json").exists()
+
+
+def test_override_from_the_blocked_quote_page(client):
+    login(client)
+    sha, truth = seed(client, "02_gas_clean")
+    s = truth.services[0]
+    s.usage, s.energy_rate, s.energy_rate_unit = 981.4, None, None  # only C19 fires
+    store.save_reviewed(store.bill_dir(sha, client.tmp), truth, [])
+    q = "gas=gas-fixed-3y"
+    html = client.get(f"/bill/{sha}/quote?{q}").text
+    assert "can't be shown yet" in html and "Override and show the comparison" in html
+    assert client.post(f"/bill/{sha}/override", data={"qs": q, "override_reason": ""}).status_code == 400
+    r = client.post(f"/bill/{sha}/override", data={"qs": q, "override_reason": "bulk customer"})
+    assert r.status_code == 303 and r.headers["location"].endswith("?" + q)
+    html = client.get(f"/bill/{sha}/quote?{q}&view=staff").text
+    assert "can't be shown yet" not in html and "Overridden by reviewer (bulk customer)" in html

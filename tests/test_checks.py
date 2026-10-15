@@ -222,3 +222,13 @@ def test_c16_duplicate_period():
 def test_c18_same_site_both_fuels():
     b = bill(services=[service(), service(**gas(site_id="0010099000011"))])
     assert "C18" in ids(b)
+
+
+# C20
+def test_c20_subtotal_must_equal_its_lines():
+    assert "C20" not in ids(bill())                         # 50 + 9 + 40 = 99
+    assert "C20" in ids(bill({"service_subtotal": 9.0}))    # the shifted-row misread
+    assert "C20" not in ids(bill({"delivery_total": None}))  # cannot add what is not there
+    assert "C20" not in ids(bill({"service_subtotal": None}))
+    f = next(x for x in check_bill(bill({"service_subtotal": 9.0}), CFG) if x.id == "C20")
+    assert f.severity == WARN and f.field == "services[0].service_subtotal"

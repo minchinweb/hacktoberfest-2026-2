@@ -102,7 +102,7 @@ def quote_flags(q: Quote, cfg: Config) -> list[Flag]:
                 "C19", BLOCK, f"services[{i}].usage",
                 f"{sq.commodity}: on {sq.offer.name} the same usage would cost {off:,.2f} against "
                 f"{cur:,.2f} now. Real offers are rarely that far apart, so usage, rate or charge "
-                "was probably misread."))
+                "was probably misread.", overridable=True))
     return out
 
 

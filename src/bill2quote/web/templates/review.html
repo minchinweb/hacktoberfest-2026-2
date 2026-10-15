@@ -31,6 +31,14 @@
       </div>
     {% endfor %}
     {% if needs_ack %}<p><label><input type="checkbox" name="ack"> I checked the flagged fields</label></p>{% endif %}
+    {% if overridable %}
+    <div class="svc">
+      <h2>Override</h2>
+      <p class="why">These red checks catch likely misreads. If you have checked the bill and the numbers really are right, you can override them. Your reason is saved with the bill, and it stops applying if any of these numbers change.</p>
+      <p><label><input type="checkbox" name="override"> The numbers are right: override</label></p>
+      <p><label>Reason <input type="text" name="override_reason" placeholder="e.g. customer on a low promotional rate"></label></p>
+    </div>
+    {% endif %}
     <p><button>Confirm</button></p>
   </form>
 </div>

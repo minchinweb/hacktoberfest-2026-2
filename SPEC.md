@@ -281,6 +281,7 @@ Each check returns zero or more `Flag(id, severity, field, message)`. Severities
 
 - **BLOCK:** no customer quote until a reviewer fixes the value.
 - **WARN:** the reviewer must tick "I checked the flagged fields".
+- **Override:** a BLOCK that only catches a likely misread (C01 more than 3× apart, and C19) is marked overridable. A reviewer who has checked the bill can override it on the review form, or on the blocked-quote page, but must give a reason. The reason, the time and the exact flag text are saved (`override.json`, `log.jsonl`), and the staff view shows the flag as overridden with that reason. The override is tied to the flag's exact text, so changing a number or the offer changes the flag and the override stops applying. Missing values, unknown units and other BLOCKs cannot be overridden.
 - **INFO:** shown, nothing required.
 
 | ID | Check | Severity |
@@ -304,6 +305,7 @@ Each check returns zero or more `Flag(id, severity, field, message)`. Severities
 | C17 | `site_id` equals `account_number` (the model put the account number in the wrong field) | BLOCK for enrolment |
 | C18 | On a dual-fuel bill, the electricity and gas site IDs are identical | WARN |
 | C19 | Quote plausibility: for a chosen offer, the retailer's two lines (energy + admin) cost more than `implausible_ratio` (3) times, or less than 1/3 of, the customer's current two lines. A number was probably misread. Runs on the review screen with the default offers, and again on the quote page with the chosen ones | BLOCK |
+| C20 | The service's `energy_charge + admin_fee + delivery_total ≈ service_subtotal` (catches values read from the wrong row). Other printed lines, such as riders, can also cause a mismatch | WARN |
 
 Every check gets unit tests with a passing case, a failing case and a missing-value case. The whole checks module runs with no model.
 

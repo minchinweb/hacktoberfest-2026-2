@@ -14,14 +14,14 @@ import threading
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .. import config, enrol, extract, ingest, quote, render, store
-from ..checks import WARN, check_bill, has_block
+from .. import assess, config, enrol, extract, ingest, quote, render, store
+from ..checks import WARN, has_block
 from ..schema import BillFacts, Service
 
 TEMPLATES = Path(__file__).parent / "templates"
@@ -160,15 +160,27 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         return offer_ids, override, qs
 
     def flags_for(facts: BillFacts, sha: str, params=None):
-        """The bill checks, plus the quote plausibility check (C19) once the bill checks pass."""
-        flags = check_bill(facts, cfg, store.seen_sites(data, exclude=sha))
-        if not has_block(flags):
-            offer_ids, override, _ = quote_inputs(params or {})
-            try:
-                flags += quote.quote_flags(quote.build_quote(facts, cfg, offer_ids, override), cfg)
-            except (ArithmeticError, TypeError, ValueError):
-                pass  # a figure the quote cannot use is already flagged by the bill checks
-        return flags
+        """Bill checks, the quote plausibility check (C19), and any reviewer override."""
+        offer_ids, override, _ = quote_inputs(params or {})
+        return assess.assess(facts, cfg, data / "bills" / sha,
+                             store.seen_sites(data, exclude=sha), offer_ids, override)
+
+    def log_event(event: dict) -> None:
+        with (data / "log.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(event) + "\n")
+
+    def try_override(form, sha: str, facts: BillFacts, flags, params) -> tuple[list, str, bool]:
+        """Apply the reviewer's override if they asked for it. Returns (flags, problem, applied)."""
+        if form.get("override") != "on":
+            return flags, "", False
+        reason = (form.get("override_reason") or "").strip()
+        if not assess.can_override(flags):
+            return flags, "These blocks can't be overridden. Fix the red fields.", False
+        if not reason:
+            return flags, "Say why the numbers are right to override. The reason is saved.", False
+        entry = assess.save_override(data / "bills" / sha, reason, assess.overridable_blocks(flags))
+        log_event({"at": entry["at"], "bill": sha, "override": entry})
+        return flags_for(facts, sha, params), "", True
 
     def render_review(request: Request, sha: str, facts: BillFacts, errors: list[str]):
         d = data / "bills" / sha
@@ -181,6 +193,7 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
                     top_fields=TOP_FIELDS, service_fields=SERVICE_FIELDS, errors=errors,
                     values=facts.model_dump(), svc_values=[s.model_dump() for s in facts.services],
                     n_pages=n_pages, needs_ack=any(f.severity == WARN for f in flags),
+                    overridable=assess.overridable_blocks(flags) if assess.can_override(flags) else [],
                     ref=(d / "ref.txt").read_text(encoding="utf-8") if (d / "ref.txt").exists() else "")
 
     @app.get("/bill/{sha}/review")
@@ -234,9 +247,13 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
                     edits.append(dict(field=f"services[{i}].{f}", model_value=m["services"][i][f],
                                       new_value=s[f], at=now))
         flags = flags_for(facts, sha, request.query_params)
+        overrode = False
         if has_block(flags):
-            return render_review(request, sha, facts, ["Fix the red fields before confirming."])
-        acked = form.get("ack") == "on"
+            flags, problem, overrode = try_override(form, sha, facts, flags, request.query_params)
+            if has_block(flags):
+                return render_review(request, sha, facts,
+                                     [problem or "Fix the red fields before confirming."])
+        acked = form.get("ack") == "on" or overrode  # overriding means the reviewer looked
         if any(f.severity == WARN for f in flags) and not acked:
             return render_review(request, sha, facts, ["Tick “I checked the flagged fields”."])
         store.save_reviewed(d, facts, edits)
@@ -271,8 +288,9 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
         flags = flags_for(facts, sha, params)
         offer_ids, override, back_qs = quote_inputs(params)
         if has_block(flags):  # never show a comparison that failed a blocking check
-            return page("quote_blocked.html", sha=sha, flags=[f for f in flags if f.severity == "BLOCK"
-                        and not f.enrol_only], qs=back_qs, offers_chosen=bool(offer_ids))
+            return page("quote_blocked.html", sha=sha, qs=back_qs, offers_chosen=bool(offer_ids),
+                        flags=[f for f in flags if assess.is_blocking(f)],
+                        can_override=assess.can_override(flags))
         q = quote.build_quote(facts, cfg, offer_ids, override)
         d = data / "bills" / sha
         ref = (d / "ref.txt").read_text(encoding="utf-8") if (d / "ref.txt").exists() else ""
@@ -285,6 +303,23 @@ def create_app(cfg: config.Config, data: Path = Path("data")) -> FastAPI:
             annual_gas=annual_gas, view=view, blocked_enrol=has_block(flags, True))
         (d / f"quote-{view}.html").write_text(html, encoding="utf-8")
         return HTMLResponse(html.replace("<main>", "<main>" + bar, 1))
+
+    @app.post("/bill/{sha}/override")
+    async def override_post(request: Request, sha: str):
+        """Override from the blocked-quote page: same rules as on the review form."""
+        got = reviewed(sha)
+        if got is None:
+            return RedirectResponse(f"/bill/{sha}/review", 303)
+        facts, _ = got
+        form = await request.form()
+        qs = str(form.get("qs") or "")
+        params = dict(parse_qsl(qs))
+        flags = flags_for(facts, sha, params)
+        if has_block(flags):
+            _, problem, _ = try_override({"override": "on", **form}, sha, facts, flags, params)
+            if problem:
+                return HTMLResponse(problem, 400)
+        return RedirectResponse(f"/bill/{sha}/quote" + (f"?{qs}" if qs else ""), 303)
 
     @app.post("/bill/{sha}/enrol")
     def enrol_post(sha: str, elec: str = Form(""), gas: str = Form("")):

@@ -22,6 +22,9 @@ class Flag:
     message: str
     # BLOCK for enrolment only: the quote can still be made, the enrolment row cannot.
     enrol_only: bool = False
+    # BLOCK that catches a likely misread, which a reviewer may override with a reason (assess.py).
+    overridable: bool = False
+    overridden: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -111,10 +114,20 @@ def check_service(i: int, s: Service, facts: BillFacts, cfg: Config) -> list[Fla
             # No tiered or blended rate explains a gap this big: a number was misread.
             f.append(Flag("C01", BLOCK, _where(i, "energy_charge"),
                           f"{shown} They are more than {cfg.implausible_ratio}× apart, so usage, "
-                          "rate or charge was misread."))
+                          "rate or charge was probably misread.", overridable=True))
         else:
             f.append(Flag("C01", WARN, _where(i, "energy_charge"),
                           f"{shown} May be a tiered or blended rate."))
+
+    # C20 the service's lines add up to its printed subtotal
+    parts = (D(s.energy_charge), D(s.admin_fee), D(s.delivery_total))
+    if None not in parts and s.service_subtotal is not None:
+        total = sum(parts)
+        if not close(total, D(s.service_subtotal), cfg):
+            f.append(Flag("C20", WARN, _where(i, "service_subtotal"),
+                          f"{lab}: energy {parts[0]} + admin {parts[1]} + delivery {parts[2]} = "
+                          f"{total}, but the subtotal says {s.service_subtotal}. A value may sit on "
+                          "the wrong line, or the bill has other lines (such as riders)."))
 
     # C02 days vs period dates (inclusive or exclusive counting)
     span = _days_between(s.period_start, s.period_end)

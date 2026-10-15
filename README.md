@@ -58,7 +58,7 @@ quote (customer view masks site IDs and shows no flags; staff view shows everyth
 
 | Model reads | Python decides |
 |---|---|
-| Transcribes what is printed, nulls for anything unreadable | 19 checks (C01–C19) on the arithmetic, units, IDs and the plausibility of the comparison |
+| Transcribes what is printed, nulls for anything unreadable | 20 checks (C01–C20) on the arithmetic, units, IDs and the plausibility of the comparison |
 | Never calculates or corrects | All money math in `Decimal`; blocking flags stop a quote |
 
 ## Eval (synthetic bills, 8 total)

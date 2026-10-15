@@ -5,5 +5,13 @@
 {% for f in flags %}<div class="err"><strong>{{ f.id }}</strong> {{ f.field }}: {{ f.message }}</div>{% endfor %}
 <p><a class="btn" href="/bill/{{ sha }}/review{{ '?' ~ qs if qs }}">Fix the numbers and re-run</a>
   {% if offers_chosen %}<a class="btn alt" href="/bill/{{ sha }}/quote">Use the default offers instead</a>{% endif %}</p>
+{% if can_override %}
+<form method="post" action="/bill/{{ sha }}/override" class="err" style="border-color:var(--line);background:var(--card)">
+  <input type="hidden" name="qs" value="{{ qs }}">
+  <p><strong>The numbers are right?</strong> Checked against the bill, you can override and show the comparison. Your reason is saved, and it stops applying if any of these numbers or the offer change.</p>
+  <p><label>Reason <input type="text" name="override_reason" required placeholder="e.g. customer on a low promotional rate"></label></p>
+  <p><button>Override and show the comparison</button></p>
+</form>
+{% endif %}
 <p class="muted">The review form keeps what you entered. Saving it runs the checks and the comparison again.</p>
 {% endblock %}

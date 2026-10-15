@@ -83,7 +83,7 @@ def _read_cached(path: Path, cfg: config.Config):
 
 
 def cmd_batch(args) -> int:
-    from . import extract, quote, render, store
+    from . import assess, extract, quote, render, store
     cfg = _cfg(args)
     files = sorted(p for p in Path(args.dir).iterdir()
                    if p.suffix.lower() in (".pdf", ".jpg", ".jpeg", ".png"))
@@ -94,7 +94,7 @@ def cmd_batch(args) -> int:
         except extract.ExtractError as e:
             print(f"{p.name:32} READ FAILED: {str(e)[:60]}")
             continue
-        flags = check_bill(facts, cfg, store.seen_sites(exclude=sha))
+        flags = assess.assess(facts, cfg, store.bill_dir(sha), store.seen_sites(exclude=sha))
         flag_txt = " ".join(dict.fromkeys(f.id for f in flags)) or "-"
         svc = "+".join(s.commodity[:4] for s in facts.services)
         if has_block(flags):

@@ -55,10 +55,20 @@ formats. This test used one basic format with no extra text, which made manual r
 the manual numbers above are the optimistic case. The tool's value on these bills was in the checks,
 not in speed.
 
+Two more benefits I expect:
+
+- **A properly formatted quote for the client.** Today my quote is scribbles on the customer's own bill.
+  The tool produces a clean one-page comparison (customer view, print or save as PDF).
+- **A record for follow-up.** Each enrolment is written to a CSV, with the partner code, the bill and the
+  offer, so it can be tracked in a CRM for follow-up and to confirm that the enrolment went through.
+  Today the tool only writes the CSV. It has no CRM connection and does not track whether an enrolment
+  succeeded.
+
 What is missing before a partner could use it alone:
 
 1. Read the previous balance and flag a carried-forward balance for a credit discussion.
 2. Treat a promotional credit as something to raise with the client, not just a note.
 3. Test on real retailer layouts, which are harder than these.
+4. Connect the enrolment record to a CRM and track whether each enrolment succeeded.
 
 Would the business pay for it, and how: *not yet answered. To be filled in by the owner.*

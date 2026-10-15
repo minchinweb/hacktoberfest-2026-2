@@ -13,3 +13,6 @@ dist/
 build/
 
 *.egg-info/
+
+# raw phone photos/zips contain GPS EXIF; only the cleaned copies in samples/photos/ are committed
+_inbox/

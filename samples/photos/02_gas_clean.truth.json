@@ -1,0 +1,38 @@
+{
+  "retailer": "Demo Retail Energy Co.",
+  "customer_name": "Riley Placeholder",
+  "service_address": "22 Fiction Rd, Testville AB T0T 0A2",
+  "account_number": "4400110022004",
+  "bill_date": "2026-09-03",
+  "current_charges_total": 250.67,
+  "gst_amount": 11.94,
+  "credits_total": null,
+  "services": [
+    {
+      "commodity": "gas",
+      "site_id": "0000099000012",
+      "plan_name": "Variable Plan",
+      "period_start": "2026-08-01",
+      "period_end": "2026-08-31",
+      "days": 31,
+      "usage": 37.49,
+      "usage_unit": "GJ",
+      "usage_m3": 981.4,
+      "gas_conversion_factor": 0.0382,
+      "meter_previous": null,
+      "meter_current": null,
+      "meter_multiplier": null,
+      "estimated_read": false,
+      "energy_rate": 4.89,
+      "energy_rate_unit": "dollars_per_GJ",
+      "energy_charge": 183.33,
+      "admin_fee": 9.3,
+      "admin_fee_rate": 0.3,
+      "admin_fee_basis": "per_day",
+      "delivery_total": 46.1,
+      "service_subtotal": 238.73
+    }
+  ],
+  "confidence": "high",
+  "unreadable": []
+}

@@ -1,0 +1,195 @@
+{
+  "gemma4:e4b": [
+    {
+      "bill": "01_elec_clean.jpg",
+      "valid": true,
+      "seconds": 19.8,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 29,
+      "fields_total": 29,
+      "wrong": []
+    },
+    {
+      "bill": "02_gas_clean.jpg",
+      "valid": true,
+      "seconds": 7.0,
+      "critical": false,
+      "site_id": true,
+      "fields_ok": 22,
+      "fields_total": 29,
+      "wrong": [
+        "gas.usage",
+        "gas.usage_m3",
+        "gas.energy_rate",
+        "gas.energy_charge",
+        "gas.admin_fee",
+        "gas.delivery_total",
+        "gas.service_subtotal"
+      ]
+    },
+    {
+      "bill": "03_dual_fuel_2page (2 photos)",
+      "valid": true,
+      "seconds": 9.3,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 48,
+      "fields_total": 50,
+      "wrong": [
+        "electricity.plan_name",
+        "gas.plan_name"
+      ]
+    },
+    {
+      "bill": "05_estimated_read.jpg",
+      "valid": true,
+      "seconds": 6.9,
+      "critical": false,
+      "site_id": true,
+      "fields_ok": 26,
+      "fields_total": 29,
+      "wrong": [
+        "electricity.energy_charge",
+        "electricity.admin_fee",
+        "electricity.delivery_total"
+      ]
+    },
+    {
+      "bill": "06_credit_dual_fuel.jpg",
+      "valid": true,
+      "seconds": 8.2,
+      "critical": false,
+      "site_id": true,
+      "fields_ok": 45,
+      "fields_total": 50,
+      "wrong": [
+        "electricity.meter_previous",
+        "electricity.meter_current",
+        "gas.usage",
+        "gas.usage_m3",
+        "gas.energy_charge"
+      ]
+    },
+    {
+      "bill": "07_inconsistent.jpg",
+      "valid": true,
+      "seconds": 7.2,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 29,
+      "fields_total": 29,
+      "wrong": []
+    },
+    {
+      "bill": "08_already_cheaper.jpg",
+      "valid": true,
+      "seconds": 8.7,
+      "critical": false,
+      "site_id": true,
+      "fields_ok": 38,
+      "fields_total": 50,
+      "wrong": [
+        "credits_total",
+        "electricity.usage",
+        "electricity.usage_unit",
+        "electricity.meter_previous",
+        "electricity.meter_current",
+        "electricity.energy_rate",
+        "electricity.energy_rate_unit",
+        "electricity.energy_charge",
+        "gas.usage",
+        "gas.usage_m3",
+        "gas.energy_charge",
+        "gas.delivery_total"
+      ]
+    }
+  ],
+  "qwen3-vl:8b": [
+    {
+      "bill": "01_elec_clean.jpg",
+      "valid": true,
+      "seconds": 60.7,
+      "critical": true,
+      "site_id": false,
+      "fields_ok": 28,
+      "fields_total": 29,
+      "wrong": [
+        "electricity.site_id"
+      ]
+    },
+    {
+      "bill": "02_gas_clean.jpg",
+      "valid": true,
+      "seconds": 92.2,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 28,
+      "fields_total": 29,
+      "wrong": [
+        "gas.plan_name"
+      ]
+    },
+    {
+      "bill": "03_dual_fuel_2page (2 photos)",
+      "valid": true,
+      "seconds": 87.0,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 48,
+      "fields_total": 50,
+      "wrong": [
+        "electricity.plan_name",
+        "gas.plan_name"
+      ]
+    },
+    {
+      "bill": "05_estimated_read.jpg",
+      "valid": false,
+      "seconds": null,
+      "critical": false,
+      "site_id": false,
+      "fields_ok": 0,
+      "fields_total": 0,
+      "wrong": [],
+      "error": "model output did not match the schema: 1 validation error for BillFacts\n  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+    },
+    {
+      "bill": "06_credit_dual_fuel.jpg",
+      "valid": true,
+      "seconds": 89.1,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 47,
+      "fields_total": 50,
+      "wrong": [
+        "customer_name",
+        "current_charges_total",
+        "gst_amount"
+      ]
+    },
+    {
+      "bill": "07_inconsistent.jpg",
+      "valid": true,
+      "seconds": 31.8,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 28,
+      "fields_total": 29,
+      "wrong": [
+        "electricity.plan_name"
+      ]
+    },
+    {
+      "bill": "08_already_cheaper.jpg",
+      "valid": false,
+      "seconds": null,
+      "critical": false,
+      "site_id": false,
+      "fields_ok": 0,
+      "fields_total": 0,
+      "wrong": [],
+      "error": "model output did not match the schema: 1 validation error for BillFacts\n  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+    }
+  ]
+}

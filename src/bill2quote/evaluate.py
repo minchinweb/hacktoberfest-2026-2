@@ -50,14 +50,18 @@ def score(pred: BillFacts, truth: dict) -> dict:
     return {"fields": fields, "critical": critical, "site_id": site_ok}
 
 
-def bills_in(directory: Path) -> list[tuple[Path, dict]]:
+def bills_in(directory: Path) -> list[tuple[list[Path], dict]]:
+    """Pair each *.truth.json with its source: STEM.pdf/.jpg/.png, or STEM.p1.jpg, STEM.p2.jpg... for a
+    multi-page bill photographed one page per file."""
     out = []
     for t in sorted(directory.glob("*.truth.json")):
         stem = t.name.removesuffix(".truth.json")
-        src = next((p for ext in (".pdf", ".jpg", ".jpeg", ".png")
-                    if (p := directory / f"{stem}{ext}").exists()), None)
-        if src:
-            out.append((src, json.loads(t.read_text(encoding="utf-8"))))
+        srcs = [p for ext in (".pdf", ".jpg", ".jpeg", ".png")
+                if (p := directory / f"{stem}{ext}").exists()][:1]
+        srcs = srcs or sorted(p for p in directory.glob(f"{stem}.p[0-9]*.*")
+                              if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
+        if srcs:
+            out.append((srcs, json.loads(t.read_text(encoding="utf-8"))))
     return out
 
 
@@ -66,9 +70,10 @@ def run(directory: Path, models: list[str], cfg: Config, log=print) -> dict:
     result: dict = {}
     for model in models:
         rows = []
-        for src, truth in bills:
-            pages = ingest.load_pages([src], cfg.models["max_pages"], cfg.models["max_image_side"])
-            row = {"bill": src.name}
+        for srcs, truth in bills:
+            pages = ingest.load_pages(srcs, cfg.models["max_pages"], cfg.models["max_image_side"])
+            name = srcs[0].name if len(srcs) == 1 else f"{srcs[0].name.split('.')[0]} ({len(srcs)} photos)"
+            row = {"bill": name}
             try:
                 facts, meta = extract.extract(pages, model, cfg.models["ollama_host"],
                                              cfg.models["num_ctx"], cfg.models["num_predict"])
@@ -80,7 +85,7 @@ def run(directory: Path, models: list[str], cfg: Config, log=print) -> dict:
             except extract.ExtractError as e:
                 row.update(valid=False, seconds=None, critical=False, site_id=False,
                            fields_ok=0, fields_total=0, wrong=[], error=str(e))
-            log(f"{model} {src.name}: critical={row['critical']} site={row['site_id']} "
+            log(f"{model} {name}: critical={row['critical']} site={row['site_id']} "
                 f"fields={row['fields_ok']}/{row['fields_total']} {row['seconds']}s")
             rows.append(row)
         result[model] = rows

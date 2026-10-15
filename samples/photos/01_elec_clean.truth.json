@@ -1,0 +1,38 @@
+{
+  "retailer": "Demo Retail Energy Co.",
+  "customer_name": "Jordan Example",
+  "service_address": "101 Sample Ave NW, Testville AB T0T 0A1",
+  "account_number": "4400110022003",
+  "bill_date": "2026-09-03",
+  "current_charges_total": 144.61,
+  "gst_amount": 6.89,
+  "credits_total": null,
+  "services": [
+    {
+      "commodity": "electricity",
+      "site_id": "0010099000011",
+      "plan_name": "Variable Plan",
+      "period_start": "2026-08-02",
+      "period_end": "2026-08-31",
+      "days": 30,
+      "usage": 612.0,
+      "usage_unit": "kWh",
+      "usage_m3": null,
+      "gas_conversion_factor": null,
+      "meter_previous": 17806.0,
+      "meter_current": 18418.0,
+      "meter_multiplier": null,
+      "estimated_read": false,
+      "energy_rate": 11.49,
+      "energy_rate_unit": "cents_per_kWh",
+      "energy_charge": 70.32,
+      "admin_fee": 9.0,
+      "admin_fee_rate": 0.3,
+      "admin_fee_basis": "per_day",
+      "delivery_total": 58.4,
+      "service_subtotal": 137.72
+    }
+  ],
+  "confidence": "high",
+  "unreadable": []
+}

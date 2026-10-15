@@ -72,11 +72,22 @@ I generated eight synthetic bills across three layouts (a one-page table, a summ
 
 **One failure, told straight.** On the synthetic gas bill, Gemma put the usage (37.49 GJ) into the energy charge field. The correct charge was $183.33. A quote built from that would have told a customer they'd lose $117.70 by switching, when they'd have saved money. Nothing about it looks wrong at a glance. What caught it was check C01: *charge 37.49 ≠ usage 37.49 × rate 4.89 = 183.33*. Two more from the same run: on the phone photo it read usage as 30.937 kWh, which looks like the previous meter reading (30,937) with the comma taken for a decimal point, and C04 flagged it; on another bill it labelled a 12.05 ¢/kWh rate as dollars, and C06 blocked the quote. Two more bills came back with site IDs one digit short: Gemma read `0010099000016` as `001009900016`, and the gas ID on the same bill lost a zero the same way, apparently dropping one from a run of zeros. C07 blocked enrolment on both, with *site ID is not 13 digits starting with 00*. A truncated ID would be quietly accepted by any tool that only checks the field is filled in. Three of eight bills needed a human fix. That is why the review screen is the product, not an afterthought.
 
-Qwen scored one bill better, but it always thinks (the `think: false` flag has no effect on it), it is about eight times slower, and two of its eight outputs were empty. I suspect the thinking ate the whole 8,192-token budget, but I haven't proved it. I kept Gemma as the default: it is fast enough to use at a kitchen table, and the one-bill difference on eight samples isn't strong evidence.
+### Real phone photos
+
+I then printed the bills and photographed them with a Pixel 7 on a table: some tilted, one with my finger over part of the page, bill 03 as two photos. Seven bills, scored separately from the table above, which still includes the simulated photo. Same prompt, same models:
+
+| Model | Bills with every quote-critical field right | Valid output | Seconds per bill |
+|---|---|---|---|
+| Gemma 4 e4b | 3 of 7 | 7 of 7 | about 10 |
+| Qwen3-VL 8b | 5 of 7 | 5 of 7 | about 72 |
+
+This is the hardest test so far, and Gemma lost ground: 3 of 7, against 5 of 8 on the clean PDFs. On the bills with a different label wording it often put values against the wrong row. My guess is that the tilt of the page shifts the right-hand values against the left-hand labels, but I haven't tested that. Its four failures were bills 02, 05, 06 and 08. On a second read of those four, a check fired on every one: C06 blocked the gas bill, where a usage of 37.49 had landed in the rate field, C12 blocked the one where usage came back empty, and the others raised C01, C03 or C04 warnings (for example *meter reads give 0.700 kWh but usage says 700.0*). Qwen got both of its misses by returning nothing usable: on bills 05 and 08 the JSON was cut off.
+
+Qwen scored one bill better, but it always thinks (the `think: false` flag has no effect on it), it is about eight times slower, and two of its eight outputs were empty. I suspect the thinking ate the whole 8,192-token budget, but I haven't proved it. I kept Gemma as the default, but less comfortably than before: on the real photos Qwen is two bills ahead (5 of 7 against 3 of 7), though still only seven bills and 8 times slower. Gemma is fast enough to use at a kitchen table, and when it is wrong the checks have caught it every time I looked. That is the trade I'm making, and more bills could change it.
 
 ### Honest limits
 
-- **Every number above is from synthetic bills**, including the "phone photo", which so far is a Pillow simulation. Real photos of printed bills, taken on a real phone, are still to come. [TODO: update once the Pixel 7 photos are in the eval.] Real retailer layouts are the next test and I expect them to be harder.
+- **Every bill here is synthetic**, printed and photographed. None is a real customer's bill. Real retailer layouts are the next test and I expect them to be harder. Seven photos is a small sample. The photos are in `samples/photos/` with the location data stripped, and the results are in `docs/eval/photos/`.
 - A frontier hosted model would probably read a blurry phone photo better. That is a real cost of staying local.
 - The 12-month estimate for gas is a rough days-scaling, labelled as such on the page, until I add heating-degree-day data. Per-bill numbers get top billing for that reason.
 - The offers in the demo are made-up round numbers. This is not a statement about any real price.

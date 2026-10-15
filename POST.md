@@ -66,13 +66,13 @@ I generated eight synthetic bills across three layouts (a one-page table, a summ
 | Model | Bills with every quote-critical field right | Valid output | Seconds per bill |
 |---|---|---|---|
 | Gemma 4 e4b | 5 of 8 | 8 of 8 | about 9 |
-| Qwen3-VL 8b | 6 of 8 | 6 of 8 | about 78 |
+| Qwen3-VL 8b | 6 of 8 | 6 of 8 | about 73 |
 
-"Quote-critical" means usage, days, energy charge or rate, and admin fee. Field-level accuracy was about 96% for both, which sounds great and is exactly the wrong number to look at: one wrong digit in the one field that matters is a wrong quote.
+"Quote-critical" means usage, days, energy charge or rate, and admin fee. Field-level accuracy was 94% for Gemma and 97% for Qwen, which sounds great and is exactly the wrong number to look at: one wrong digit in the one field that matters is a wrong quote.
 
 **One failure, told straight.** On the synthetic gas bill, Gemma put the usage (37.49 GJ) into the energy charge field. The correct charge was $183.33. A quote built from that would have told a customer they'd lose $117.70 by switching, when they'd have saved money. Nothing about it looks wrong at a glance. What caught it was check C01: *charge 37.49 ≠ usage 37.49 × rate 4.89 = 183.33*. Two more from the same run: on the phone photo it read usage as 30.937 kWh, which looks like the previous meter reading (30,937) with the comma taken for a decimal point, and C04 flagged it; on another bill it labelled a 12.05 ¢/kWh rate as dollars, and C06 blocked the quote. Three of eight bills needed a human fix. That is why the review screen is the product, not an afterthought.
 
-Qwen scored one bill better, but it always thinks (the `think: false` flag has no effect on it), it is nine times slower, and two of its eight outputs were empty. I suspect the thinking ate the whole 8,192-token budget, but I haven't proved it. I kept Gemma as the default: it is fast enough to use at a kitchen table, and the one-bill difference on eight samples isn't strong evidence.
+Qwen scored one bill better, but it always thinks (the `think: false` flag has no effect on it), it is about eight times slower, and two of its eight outputs were empty. I suspect the thinking ate the whole 8,192-token budget, but I haven't proved it. I kept Gemma as the default: it is fast enough to use at a kitchen table, and the one-bill difference on eight samples isn't strong evidence.
 
 ### Honest limits
 

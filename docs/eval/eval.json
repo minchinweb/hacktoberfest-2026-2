@@ -3,7 +3,7 @@
     {
       "bill": "01_elec_clean.pdf",
       "valid": true,
-      "seconds": 19.3,
+      "seconds": 19.9,
       "critical": true,
       "site_id": true,
       "fields_ok": 29,
@@ -26,7 +26,7 @@
     {
       "bill": "03_dual_fuel_2page.pdf",
       "valid": true,
-      "seconds": 8.9,
+      "seconds": 8.7,
       "critical": true,
       "site_id": true,
       "fields_ok": 49,
@@ -38,7 +38,7 @@
     {
       "bill": "04_phone_photo_dual_fuel.jpg",
       "valid": true,
-      "seconds": 8.0,
+      "seconds": 7.9,
       "critical": false,
       "site_id": true,
       "fields_ok": 45,
@@ -54,7 +54,7 @@
     {
       "bill": "05_estimated_read.pdf",
       "valid": true,
-      "seconds": 6.5,
+      "seconds": 6.7,
       "critical": true,
       "site_id": true,
       "fields_ok": 29,
@@ -64,12 +64,14 @@
     {
       "bill": "06_credit_dual_fuel.pdf",
       "valid": true,
-      "seconds": 7.6,
+      "seconds": 8.0,
       "critical": false,
-      "site_id": true,
-      "fields_ok": 47,
+      "site_id": false,
+      "fields_ok": 45,
       "fields_total": 50,
       "wrong": [
+        "electricity.site_id",
+        "gas.site_id",
         "gas.usage",
         "gas.usage_m3",
         "gas.energy_charge"
@@ -78,7 +80,7 @@
     {
       "bill": "07_inconsistent.pdf",
       "valid": true,
-      "seconds": 6.6,
+      "seconds": 6.9,
       "critical": true,
       "site_id": true,
       "fields_ok": 28,
@@ -90,30 +92,30 @@
     {
       "bill": "08_already_cheaper.pdf",
       "valid": true,
-      "seconds": 7.8,
+      "seconds": 8.1,
       "critical": false,
-      "site_id": true,
-      "fields_ok": 48,
+      "site_id": false,
+      "fields_ok": 46,
       "fields_total": 50,
       "wrong": [
+        "electricity.site_id",
         "electricity.usage",
-        "electricity.usage_unit"
+        "electricity.usage_unit",
+        "gas.site_id"
       ]
     }
   ],
   "qwen3-vl:8b": [
     {
       "bill": "01_elec_clean.pdf",
-      "valid": true,
-      "seconds": 53.6,
-      "critical": true,
+      "valid": false,
+      "seconds": null,
+      "critical": false,
       "site_id": false,
-      "fields_ok": 27,
-      "fields_total": 29,
-      "wrong": [
-        "electricity.site_id",
-        "electricity.plan_name"
-      ]
+      "fields_ok": 0,
+      "fields_total": 0,
+      "wrong": [],
+      "error": "model output did not match the schema: 1 validation error for BillFacts\n  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
     },
     {
       "bill": "02_gas_clean.pdf",
@@ -129,7 +131,7 @@
     {
       "bill": "03_dual_fuel_2page.pdf",
       "valid": true,
-      "seconds": 118.9,
+      "seconds": 65.3,
       "critical": true,
       "site_id": true,
       "fields_ok": 48,
@@ -142,32 +144,33 @@
     {
       "bill": "04_phone_photo_dual_fuel.jpg",
       "valid": true,
-      "seconds": 99.2,
+      "seconds": 105.2,
       "critical": true,
-      "site_id": true,
-      "fields_ok": 46,
+      "site_id": false,
+      "fields_ok": 47,
       "fields_total": 50,
       "wrong": [
-        "current_charges_total",
-        "gst_amount",
         "electricity.plan_name",
+        "gas.site_id",
         "gas.plan_name"
       ]
     },
     {
       "bill": "05_estimated_read.pdf",
       "valid": true,
-      "seconds": 44.0,
+      "seconds": 59.5,
       "critical": true,
       "site_id": true,
-      "fields_ok": 29,
+      "fields_ok": 28,
       "fields_total": 29,
-      "wrong": []
+      "wrong": [
+        "electricity.plan_name"
+      ]
     },
     {
       "bill": "06_credit_dual_fuel.pdf",
       "valid": true,
-      "seconds": 88.1,
+      "seconds": 70.3,
       "critical": true,
       "site_id": true,
       "fields_ok": 50,
@@ -177,7 +180,7 @@
     {
       "bill": "07_inconsistent.pdf",
       "valid": true,
-      "seconds": 64.7,
+      "seconds": 64.5,
       "critical": true,
       "site_id": true,
       "fields_ok": 28,
@@ -188,14 +191,13 @@
     },
     {
       "bill": "08_already_cheaper.pdf",
-      "valid": false,
-      "seconds": null,
-      "critical": false,
-      "site_id": false,
-      "fields_ok": 0,
-      "fields_total": 0,
-      "wrong": [],
-      "error": "model output did not match the schema: 1 validation error for BillFacts\n  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+      "valid": true,
+      "seconds": 74.5,
+      "critical": true,
+      "site_id": true,
+      "fields_ok": 50,
+      "fields_total": 50,
+      "wrong": []
     }
   ]
 }

@@ -1,7 +1,7 @@
 """Generate the synthetic sample bills and their ground truth (SPEC §12).
 
 Seeded and deterministic. Everything here is fictional: retailer, people, addresses,
-account numbers and site IDs (0000099...). Truth is built from the same numbers that are
+account numbers and site IDs (0010099... electricity, 0000099... gas). Truth is built from the same numbers that are
 rendered, so it is right by construction.
 
     python samples/make_samples.py
@@ -242,7 +242,8 @@ def _persp(dst, src):
 
 def build() -> list[dict]:
     random.seed(2026)
-    S = lambda n: f"00000990000{n:02d}"
+    # Electricity IDs start 00 but never 000; gas IDs start 000 (SPEC §2).
+    S = lambda n, gas=False: f"{'000' if gas else '001'}0099{n:06d}"
     a, b = LABELS["plain"], LABELS["alt"]
     bills = []
 
@@ -254,13 +255,13 @@ def build() -> list[dict]:
         "2026-09-03", [elec_service(S(11), 612, 11.49, 30, 0.30, 58.40, "2026-08-02", "2026-08-31")]))
     add("02_gas_clean", render_a, b, make_bill(
         "Riley Placeholder", "22 Fiction Rd, Testville AB T0T 0A2", "4400110022004",
-        "2026-09-03", [gas_service(S(12), 981.4, 0.0382, 4.89, 31, 0.30, 46.10,
+        "2026-09-03", [gas_service(S(12, True), 981.4, 0.0382, 4.89, 31, 0.30, 46.10,
                                    "2026-08-01", "2026-08-31")]))
     add("03_dual_fuel_2page", render_b, a, make_bill(
         "Sam Fakename", "7 Imaginary Cres, Testville AB T0T 0A3", "4400110022005",
         "2026-09-04", [
             elec_service(S(13), 540, 12.05, 30, 0.30, 55.20, "2026-08-02", "2026-08-31"),
-            gas_service(S(14), 450.0, 0.0381, 5.15, 30, 0.30, 38.75, "2026-08-02", "2026-08-31")]))
+            gas_service(S(14, True), 450.0, 0.0381, 5.15, 30, 0.30, 38.75, "2026-08-02", "2026-08-31")]))
     add("05_estimated_read", render_a, b, make_bill(
         "Alex Notreal", "9 Make-Believe Pl, Testville AB T0T 0A4", "4400110022006",
         "2026-09-05", [elec_service(S(15), 455, 10.99, 29, 0.25, 51.00, "2026-08-02", "2026-08-30",
@@ -269,7 +270,7 @@ def build() -> list[dict]:
         "Casey Madeup", "310 Pretend St, Testville AB T0T 0A5", "4400110022007",
         "2026-09-06", [
             elec_service(S(16), 700, 11.95, 31, 0.30, 62.00, "2026-08-01", "2026-08-31"),
-            gas_service(S(17), 600.0, 0.0380, 4.95, 31, 0.30, 41.00, "2026-08-01", "2026-08-31")],
+            gas_service(S(17, True), 600.0, 0.0380, 4.95, 31, 0.30, 41.00, "2026-08-01", "2026-08-31")],
         credits=25.00))
     bad = make_bill(
         "Morgan Invented", "55 Mock Blvd, Testville AB T0T 0A6", "4400110022008",
@@ -285,7 +286,7 @@ def build() -> list[dict]:
         "Taylor Sampledata", "88 Dummy Lane, Testville AB T0T 0A7", "4400110022009",
         "2026-09-08", [
             elec_service(S(19), 650, 8.29, 30, 0.20, 52.00, "2026-08-02", "2026-08-31"),
-            gas_service(S(20), 520.0, 0.0383, 3.69, 30, 0.20, 40.00, "2026-08-02", "2026-08-31")]))
+            gas_service(S(20, True), 520.0, 0.0383, 3.69, 30, 0.20, 40.00, "2026-08-02", "2026-08-31")]))
     return bills
 
 

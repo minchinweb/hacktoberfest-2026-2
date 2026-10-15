@@ -21,7 +21,7 @@ DEFAULTS: dict[str, Any] = {
     "brand": {"name": "Demo Retail Energy Co.", "phone": "", "email": "", "logo": ""},
     "tax": {"gst_rate": "0.05"},
     "checks": {
-        "site_id_regex": {"electricity": r"^0\d{12}$", "gas": r"^0\d{12}$"},
+        "site_id_regex": {"electricity": r"^00[1-9]\d{10}$", "gas": r"^000\d{10}$"},
         "elec_rate_cents_range": [2, 40],
         "gas_rate_dollars_range": [1, 20],
         "gas_factor_range": [0.030, 0.045],

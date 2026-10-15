@@ -61,7 +61,7 @@ Verified against the Utilities Consumer Advocate (UCA) and EPCOR on 2026-10-13. 
   Source: https://epcor.com/ca/en/news/notices/2024-11-21-regulated-rate-option-to-change-to-the-rate-of-last-resort.html
 - **Units:** electricity is billed in kWh, with an energy rate in ¢/kWh or $/kWh. Gas is billed in GJ, converted from m³ by a conversion factor printed on the bill, with an energy rate in $/GJ. An admin fee is usually per day or per month.
 - **Dual-fuel bills** (electricity and gas on one statement) are common, so a bill can hold more than one service.
-- **Site ID format (confirmed by the owner):** 13 digits, starting with `0`, for both electricity and gas. So a site ID's format doesn't tell you its commodity; its position on the bill does. Keep the format in config as a regex.
+- **Site ID format (confirmed by the owner):** 13 digits, starting with `00` (but never `000`) for electricity, and `000` for natural gas. Keep the format in config as a regex.
 - **Watch for account numbers that look like site IDs.** At least one retailer's account number is also 13 digits (ATCO, *How to read your retail energy bill*: https://www.atcoenergy.com/blog/understanding-your-bill). The schema extracts the account number only so the model has somewhere to put it other than `site_id`. It is never exported.
 - **GST:** 5% on the bill. Savings shown to a customer include GST on the difference.
 - **Total due ≠ this period's charges.** Total due may include a previous balance, so the checks use *current charges*.
@@ -239,8 +239,8 @@ logo = ""
 gst_rate = "0.05"
 
 [checks]
-site_id_regex.electricity = '^0\d{12}$' # confirmed: 13 digits, leading 0
-site_id_regex.gas = '^0\d{12}$'         # same format as electricity
+site_id_regex.electricity = '^00[1-9]\d{10}$' # confirmed: 13 digits, leading 00, never 000
+site_id_regex.gas = '^000\d{10}$'        # confirmed: 13 digits, leading 000
 elec_rate_cents_range = [2, 40]
 gas_rate_dollars_range = [1, 20]
 gas_factor_range = [0.030, 0.045]       # GJ per m3; a deliberately loose sanity range
@@ -366,7 +366,7 @@ Every quote also carries the note "assumes your current rate stays the same for 
 
 ## 12. Samples and test data
 
-**All test data is synthetic (decided).** `samples/make_samples.py`, seeded and deterministic, renders bills with reportlab. Use fictional retailers (e.g. "Demo Retail Energy Co."), fictional people and addresses, and site IDs in the real format (13 digits, leading `0`) that are clearly fake (e.g. `0000099…`, and say in the README that they're fictional). Give every sample a 13-digit account number too, so the site-ID-vs-account-number confusion (C17) actually gets tested. Each bill's `*.truth.json` comes from the same data that rendered it, so the truth is right by construction. **Don't copy any real retailer's branding or layout.**
+**All test data is synthetic (decided).** `samples/make_samples.py`, seeded and deterministic, renders bills with reportlab. Use fictional retailers (e.g. "Demo Retail Energy Co."), fictional people and addresses, and site IDs in the real format (13 digits, leading `00` but never `000` for electricity, `000` for gas) that are clearly fake (e.g. `0000099…`, and say in the README that they're fictional). Give every sample a 13-digit account number too, so the site-ID-vs-account-number confusion (C17) actually gets tested. Each bill's `*.truth.json` comes from the same data that rendered it, so the truth is right by construction. **Don't copy any real retailer's branding or layout.**
 
 Because there are no real bills, guard against a model and prompt that only work on one made-up layout:
 - **At least three distinct layouts:** (a) a one-page table, (b) a summary page plus a detail page, (c) a two-column dual-fuel statement. Vary the wording too: "Energy Charge" vs "Electricity Supply"; "Admin Fee" vs "Retailer Administration Charge"; ¢/kWh vs $/kWh.
@@ -449,7 +449,7 @@ If behind schedule, cut in this order: Docker → gas HDD annualisation (fall ba
 - **Test data:** synthetic only, including printed-and-photographed samples.
 - **Name:** `bill2quote` (package, CLI and repo name in docs).
 - **First user:** the owner, using it internally as the retailer (§13).
-- **Site IDs:** 13 digits, leading `0`, for both electricity and gas.
+- **Site IDs:** 13 digits, leading `00` (never `000`) for electricity, `000` for gas.
 - **Enrolment needs from the bill:** site ID, name, service address. Contact details are collected separately. The old account number is not needed.
 
 **Still open (the build session decides, or asks the owner):**

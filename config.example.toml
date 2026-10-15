@@ -19,8 +19,8 @@ logo = ""
 gst_rate = "0.05"
 
 [checks]
-site_id_regex.electricity = '^0\d{12}$' # 13 digits, leading 0
-site_id_regex.gas = '^0\d{12}$'         # same format as electricity
+site_id_regex.electricity = '^00[1-9]\d{10}$' # 13 digits, leading 00 (not 000)
+site_id_regex.gas = '^000\d{10}$'        # 13 digits, leading 000
 elec_rate_cents_range = [2, 40]
 gas_rate_dollars_range = [1, 20]
 gas_factor_range = [0.030, 0.045]       # GJ per m3; a deliberately loose sanity range

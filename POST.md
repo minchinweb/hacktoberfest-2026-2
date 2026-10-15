@@ -54,7 +54,7 @@ Then 18 deterministic checks run, each returning a flag with a severity. A few o
 - **C01:** does the energy charge equal usage × rate?
 - **C04:** do the meter readings add up to the usage?
 - **C06:** is the rate plausible for its unit? (This one catches ¢ vs $ mix-ups and blocks the quote.)
-- **C07 / C17:** is the site ID 13 digits starting with 0, and is it *not* the account number? Some account numbers are also 13 digits, so a model can easily put the wrong one in the wrong box.
+- **C07 / C17:** is the site ID 13 digits starting with 00 (electricity, never 000) or 000 (gas), and is it *not* the account number? Some account numbers are also 13 digits, so a model can easily put the wrong one in the wrong box.
 - **C12:** is anything quote-critical missing?
 
 Blocking flags stop a customer quote. Warnings must be acknowledged on the review screen with a tick box. Every edit a reviewer makes is logged with the model's value, the new value and the time.

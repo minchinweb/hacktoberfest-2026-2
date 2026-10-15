@@ -147,7 +147,8 @@ def check_service(i: int, s: Service, facts: BillFacts, cfg: Config) -> list[Fla
     rx = c["site_id_regex"][s.commodity]
     if s.site_id is None or not re.match(rx, s.site_id.replace(" ", "")):
         f.append(Flag("C07", BLOCK, _where(i, "site_id"),
-                      f"{lab}: site ID {s.site_id!r} is not 13 digits starting with 0.",
+                      f"{lab}: site ID {s.site_id!r} is not 13 digits starting with "
+                      f"{'000' if s.commodity == 'gas' else '00'}.",
                       enrol_only=True))
 
     # C17 site id equals account number

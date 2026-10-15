@@ -31,7 +31,7 @@ def test_extract_accepts_fenced_json(monkeypatch):
                 "credits_total": None,
                 "services": [{
                     "commodity": "electricity",
-                    "site_id": "0000099000011",
+                    "site_id": "0010099000011",
                     "plan_name": "Plan",
                     "period_start": "2026-08-01",
                     "period_end": "2026-08-31",

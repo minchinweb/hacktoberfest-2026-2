@@ -7,7 +7,7 @@ CFG = config.load("config.example.toml")
 
 def service(**kw):
     base = dict(
-        commodity="electricity", site_id="0000099000011", plan_name="Plan",
+        commodity="electricity", site_id="0010099000011", plan_name="Plan",
         period_start="2026-08-01", period_end="2026-08-31", days=30,
         usage=500.0, usage_unit="kWh", usage_m3=None, gas_conversion_factor=None,
         meter_previous=1000.0, meter_current=1500.0, meter_multiplier=1.0,
@@ -127,6 +127,17 @@ def test_c07_bad_site_id_blocks_enrolment_only():
     assert not has_block(flags) and has_block(flags, for_enrolment=True)
 
 
+def test_c07_prefix_depends_on_commodity():
+    # electricity needs 00..., gas needs 000...
+    assert "C07" in ids(bill({"site_id": "0123456789012"}))
+    assert "C07" not in ids(bill({"site_id": "0012345678901"}))
+    assert "C07" in ids(bill({"site_id": "0002345678901"}))  # electricity is never 000
+    b = bill(services=[service(**gas(site_id="0012345678901"))])
+    assert "C07" in ids(b)
+    b = bill(services=[service(**gas(site_id="0001234567890"))])
+    assert "C07" not in ids(b)
+
+
 def test_c07_missing_site_id():
     assert "C07" in ids(bill({"site_id": None}))
 
@@ -190,12 +201,12 @@ def test_c12_blocks_quote():
 
 # C16
 def test_c16_duplicate_period():
-    flags = check_bill(bill(), CFG, seen={("0000099000011", "2026-08-31")})
+    flags = check_bill(bill(), CFG, seen={("0010099000011", "2026-08-31")})
     assert any(f.id == "C16" for f in flags)
     assert not any(f.id == "C16" for f in check_bill(bill(), CFG, seen=set()))
 
 
 # C18
 def test_c18_same_site_both_fuels():
-    b = bill(services=[service(), service(**gas(site_id="0000099000011"))])
+    b = bill(services=[service(), service(**gas(site_id="0010099000011"))])
     assert "C18" in ids(b)

@@ -10,7 +10,7 @@
   "services": [
     {
       "commodity": "electricity",
-      "site_id": "0000099000018",
+      "site_id": "0010099000018",
       "plan_name": "Variable Plan",
       "period_start": "2026-08-02",
       "period_end": "2026-08-31",

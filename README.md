@@ -15,7 +15,7 @@ cheaper, the page says so.
 ## Data note
 
 **Every bill in this repo is synthetic.** The retailer, people, addresses, account numbers and
-site IDs (`0000099…`) are fictional, and the demo offers are made-up round numbers. No real bill or
+site IDs (`0010099…` electricity, `0000099…` gas) are fictional, and the demo offers are made-up round numbers. No real bill or
 customer data is committed (`data/`, `private/` and `*.real.*` are gitignored). Accuracy numbers
 below come from synthetic layouts only, including phone photos of printed samples. Real retailer
 layouts are the next test.

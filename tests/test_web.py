@@ -75,10 +75,10 @@ def test_customer_view_masks_site_and_hides_flags_staff_shows_both(client):
     r = client.post(f"/bill/{sha}/review", data=form_for(truth))
     assert r.status_code == 303
     cust = client.get(f"/bill/{sha}/quote?view=customer").text
-    assert "0000099000011" not in cust and "0011" in cust
+    assert "0010099000011" not in cust and "0011" in cust
     assert "Flags (staff only)" not in cust
     staff = client.get(f"/bill/{sha}/quote?view=staff").text
-    assert "0000099000011" in staff and "Flags (staff only)" in staff
+    assert "0010099000011" in staff and "Flags (staff only)" in staff
 
 
 def test_negative_savings_page_renders_plainly(client):
@@ -96,7 +96,7 @@ def test_enrolment_csv_omits_account_number(client):
     assert client.post(f"/bill/{sha}/enrol", data={"elec": "elec-fixed-3y",
                                                    "gas": "gas-fixed-3y"}).status_code == 303
     csv_text = (client.tmp / "enrolments.csv").read_text(encoding="utf-8")
-    assert "0000099000013" in csv_text and "0000099000014" in csv_text
+    assert "0010099000013" in csv_text and "0000099000014" in csv_text
     assert truth.account_number not in csv_text
     assert len(csv_text.strip().splitlines()) == 3  # header + two sites
 
